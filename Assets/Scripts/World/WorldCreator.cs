@@ -18,7 +18,7 @@ public class WorldCreator : MonoBehaviour
     }
 
 
-    public void Generate(Level level)
+    public void Generate(GameManager gameManager, Level level)
     {
         foreach (var envkvp in level.Environment)
         {
@@ -35,10 +35,10 @@ public class WorldCreator : MonoBehaviour
         
         foreach (var envkvp in level.Agents)
         {
-            switch (envkvp.Value.AgentType)
+            switch (envkvp.Value)
             {
                 case AgentType.Player:
-                    SpawnAgent(_playerPrefab, envkvp.Key);
+                    SpawnAgent(_playerPrefab, envkvp.Key, gameManager);
                     continue;
             }
         }
@@ -61,11 +61,11 @@ public class WorldCreator : MonoBehaviour
         var pos = new Vector3Int(gridPos.x,gridPos.y,0);
         Instantiate(prefab,_grid.CellToWorld(pos), Quaternion.identity, transform);
     }
-    private void SpawnAgent(GameObject prefab, Vector2Int gridPos)
+    private void SpawnAgent(GameObject prefab, Vector2Int gridPos, GameManager gameManager)
     {
         var pos = new Vector3Int(gridPos.x,gridPos.y,0);
         var gen = Instantiate(prefab,_grid.CellToWorld(pos), Quaternion.identity, transform);
         var agent = gen.GetComponent<GameAgentBase>();
-        agent.Init(gridPos);
+        agent.Init(gameManager, gridPos);
     }
 }

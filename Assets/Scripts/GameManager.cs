@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     public static Action<GameState> OnGameStateChanged;
     
     private GameState _state;
+    public Level Level => _level;
     private Level _level;
     [SerializeField] WorldCreator worldCreator;
    
@@ -25,6 +26,6 @@ public class GameManager : MonoBehaviour
         ChangeState(GameState.Generating);
         _level = LevelFactory.CreateCircleLevel(10);
         
-        worldCreator.Generate(_level);
+        worldCreator.Generate(this, _level);
     }
 }

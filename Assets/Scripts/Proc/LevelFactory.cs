@@ -27,7 +27,7 @@ namespace Proc
             var min = size / 2 - psize;
             var max = size / 2 + psize;
             Vector2Int pLoc = new Vector2Int(Random.Range(min, max), Random.Range(min, max));
-            level.Agents.Add(pLoc, new Agent(AgentType.Player));
+            level.Agents.Add(pLoc, AgentType.Player);
             return level;
         }
     }
