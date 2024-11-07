@@ -17,6 +17,10 @@ public class WorldCreator : MonoBehaviour
         _grid = GetComponent<Grid>();
     }
 
+    public Vector3 GridToWorld(Vector2Int pos)
+    {
+        return _grid.CellToWorld(new Vector3Int(pos.x, pos.y, 0));
+    }
 
     public void Generate(GameManager gameManager, Level level)
     {

@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
     private GameState _state;
     public Level Level => _level;
     private Level _level;
+    public WorldCreator WorldCreator => worldCreator;
     [SerializeField] WorldCreator worldCreator;
    
     private void ChangeState(GameState newState)

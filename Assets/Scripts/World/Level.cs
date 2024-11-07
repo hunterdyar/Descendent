@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using DefaultNamespace;
 
 public class Level
 {
@@ -24,6 +25,8 @@ public class Level
     {
         _environment = new Dictionary<Vector2Int, EnvTile>();
         _initialAgents = new Dictionary<Vector2Int, AgentType>();
+        _gameAgentsMap = new Dictionary<Vector2Int, GameAgentBase>();
+        _gameAgentsPositionLookup = new Dictionary<GameAgentBase, Vector2Int>();
     }
 
     public BoundsInt CalculateBounds()
@@ -57,17 +60,17 @@ public class Level
         if (old == newPosition)
         {
             Debug.LogError("Agent already in this position!");
+            return;
         }
 
-        if (!_gameAgentsMap.ContainsKey(newPosition))
+        if (_gameAgentsMap.ContainsKey(newPosition))
         {
             Debug.LogError("Agent at this position already!");
             return;
         }
 
-        _gameAgentsMap.Remove(newPosition);
+        _gameAgentsMap.Remove(old);
         _gameAgentsMap.Add(newPosition, agent);
-        
         _gameAgentsPositionLookup[agent] = newPosition;
     }
 
@@ -83,5 +86,48 @@ public class Level
 
         _gameAgentsMap.Remove(current);
         _gameAgentsPositionLookup.Remove(agent);
+    }
+
+    public Vector2Int GetPosition(GameAgentBase agent)
+    {
+        if (_gameAgentsPositionLookup.TryGetValue(agent, out var pos))
+        {
+            return pos;
+        }
+
+        throw new Exception("Can't get position, agent not in map");
+    }
+
+    public (GameAgentBase? agent, Vector2Int) GetFirstAgentOrWall(Vector2Int start, Vector2Int direction)
+    {
+        if (direction == Vector2Int.zero)
+        {
+            throw new ArgumentException("Direction cannot be zero", nameof(direction));
+        }
+        GameAgentBase? agent = null;
+        var test = start;
+        while (agent == null)
+        {
+            if (_environment.TryGetValue(test+direction, out var tile))
+            {
+                if (tile == EnvTile.Wall)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+            
+            test = test + direction;
+            
+            if (_gameAgentsMap.TryGetValue(test, out agent))
+            {
+                break;
+            }
+        }
+
+        return (agent, test);
     }
 }
