@@ -55,7 +55,6 @@ public class Level
 
     public void MoveAgent(GameAgentBase agent, Vector2Int newPosition)
     {
-      
         var old = _gameAgentsPositionLookup[agent];
         if (old == newPosition)
         {
@@ -129,5 +128,11 @@ public class Level
         }
 
         return (agent, test);
+    }
+
+    public Vector2Int GetRandomPosition(EnvTile ofType)
+    {
+        var positions = _environment.Where(x=>x.Value == ofType).ToArray();
+        return positions[UnityEngine.Random.Range(0, positions.Length)].Key;
     }
 }

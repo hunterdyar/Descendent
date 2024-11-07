@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace DefaultNamespace
 {
-    public class Player : GameAgentBase
+    public class Player : Pawn
     {
         public void Move(Vector2Int dir)
         {
@@ -18,9 +18,20 @@ namespace DefaultNamespace
             else
             {
                 //hit the agent.
+                var agentWeHit = test.agent;
                 
                 //move to next to it.
-                MoveAgent(test.Item2-dir);
+                if (test.Item2-dir != c)
+                {
+                    MoveAgent(test.Item2 - dir);
+                }
+
+                //FIGHT
+                if (agentWeHit is Pawn pawn)
+                {
+                    var duel = new Duel(this, pawn);
+                    duel.Resolve();
+                }
             }
         }
     }

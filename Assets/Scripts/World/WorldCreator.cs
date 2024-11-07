@@ -8,6 +8,7 @@ public class WorldCreator : MonoBehaviour
     public GameObject _wallTilePrefab;
     [Header("Agents")]
     public GameObject _playerPrefab;
+    public GameObject _enemyPrefab;
     
     
     private Grid _grid;
@@ -43,6 +44,10 @@ public class WorldCreator : MonoBehaviour
             {
                 case AgentType.Player:
                     SpawnAgent(_playerPrefab, envkvp.Key, gameManager);
+                    continue;
+                case AgentType.Enemy:
+                    //how do we randomly decide how stronk they are?
+                    SpawnAgent(_enemyPrefab, envkvp.Key, gameManager);
                     continue;
             }
         }
