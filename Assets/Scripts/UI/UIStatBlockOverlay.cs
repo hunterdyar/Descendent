@@ -29,7 +29,10 @@ public class UIStatBlockOverlay : MonoBehaviour
 
     private void OnDestroy()
     {
-        _stat.OnAttackChange -= UpdateAttack;
-        _stat.OnHealthChange -= UpdateHealth;
+        if (_stat != null)
+        {
+            _stat.OnAttackChange -= UpdateAttack;
+            _stat.OnHealthChange -= UpdateHealth;
+        }
     }
 }

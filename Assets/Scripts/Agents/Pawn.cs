@@ -24,7 +24,7 @@ public class Pawn : GameAgentBase
         _stats.LoseHealth(damage);
     }
 
-    public void OnVictory(Pawn pawnB)
+    public virtual void OnVictory(Pawn pawnB)
     {
         _stats.LevelUp();
     }

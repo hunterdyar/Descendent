@@ -97,13 +97,13 @@ public class Level
         throw new Exception("Can't get position, agent not in map");
     }
 
-    public (GameAgentBase? agent, Vector2Int) GetFirstAgentOrWall(Vector2Int start, Vector2Int direction)
+    public (GameAgentBase agent, Vector2Int) GetFirstAgentOrWall(Vector2Int start, Vector2Int direction)
     {
         if (direction == Vector2Int.zero)
         {
             throw new ArgumentException("Direction cannot be zero", nameof(direction));
         }
-        GameAgentBase? agent = null;
+        GameAgentBase agent = null;
         var test = start;
         while (agent == null)
         {

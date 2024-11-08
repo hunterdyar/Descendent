@@ -1,9 +1,11 @@
+using System;
 using UnityEngine;
 
 namespace DefaultNamespace
 {
     public class Player : Pawn
     {
+        public static Action<int> OnPlayerExperienceChange;
         public void Move(Vector2Int dir)
         {
             var c = CurrentPos;
@@ -33,6 +35,27 @@ namespace DefaultNamespace
                     duel.Resolve();
                 }
             }
+        }
+
+        private void OnEnable()
+        {
+            Stats.OnExperienceChange += OnPlayerExperienceChange;
+        }
+
+        private void OnDisable()
+        {
+            Stats.OnExperienceChange -= OnPlayerExperienceChange;
+        }
+
+        void Start()
+        {
+            OnPlayerExperienceChange?.Invoke(Stats.Experience);
+        }
+
+        public override void OnVictory(Pawn pawnB)
+        {
+            Stats.GainExperience(pawnB.Stats.Experience);
+            base.OnVictory(pawnB);
         }
     }
 }
