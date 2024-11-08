@@ -1,10 +1,17 @@
 
+using System;
 using UnityEngine;
 
 public class Pawn : GameAgentBase
 {
     public StatBlock Stats => _stats;
     [SerializeField] StatBlock _stats;
+    [SerializeField] UIStatBlockOverlay _statsUI;
+
+    private void Start()
+    {
+        _statsUI?.Init(_stats);
+    }
 
     public void Die()
     {
