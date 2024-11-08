@@ -47,9 +47,10 @@ namespace DefaultNamespace
             Stats.OnExperienceChange -= OnPlayerExperienceChange;
         }
 
-        void Start()
+        protected override void Start()
         {
             OnPlayerExperienceChange?.Invoke(Stats.Experience);
+            base.Start();
         }
 
         public override void OnVictory(Pawn pawnB)
