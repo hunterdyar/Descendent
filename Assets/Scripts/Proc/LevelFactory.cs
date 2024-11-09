@@ -4,13 +4,27 @@ namespace Proc
 {
     public static class LevelFactory
     {
-        public static Level CreateCircleLevel(int size)
+        public static RuntimeLevel CreateRandomValidSquareLevel(int size, int walls, int exits, int minMoves)
+        {
+            for (int i = 0; i < 1000; i++)
+            {
+                var pl = ProtoLevel.CreateRandom(size, size, walls, exits);
+                if (Solver.Solve(pl, minMoves))
+                {
+                    return RuntimeLevel.FromProtoLevel(pl);
+                }
+            }
+            Debug.LogError("Unable to create random valid level.");
+            return null;
+        }
+        
+        public static RuntimeLevel CreateCircleLevel(int size)
         {
             if (size < 2)
             {
-                return new Level();
+                return new RuntimeLevel();
             }
-            Level level = new Level();
+            RuntimeLevel runtimeLevel = new RuntimeLevel();
             float radius = (size / 2f)-0.5f;
             //make a circle
             for (int i = 0; i < size; i++)
@@ -19,7 +33,7 @@ namespace Proc
                 {
                     var pos = new Vector2(i, j) - new Vector2(radius, radius);
                     EnvTile t = pos.magnitude < radius ? EnvTile.Floor : EnvTile.Wall;
-                    level.Environment.Add(new Vector2Int(i,j),t);
+                    runtimeLevel.Environment.Add(new Vector2Int(i,j),t);
                 }
             }
             
@@ -28,23 +42,23 @@ namespace Proc
             var min = size / 2 - psize;
             var max = size / 2 + psize;
             Vector2Int pLoc = new Vector2Int(Random.Range(min, max), Random.Range(min, max));
-            level.Agents.Add(pLoc, AgentType.Player);
+            runtimeLevel.Agents.Add(pLoc, AgentType.Player);
             
             //Some enemies
             int enemyCount = 5;
             for (int i = 0; i < enemyCount; i++)
             {
-                var pos = level.GetRandomPosition(EnvTile.Floor);
-                if (level.Agents.ContainsKey(pos))
+                var pos = runtimeLevel.GetRandomPosition(EnvTile.Floor);
+                if (runtimeLevel.Agents.ContainsKey(pos))
                 {
                     i--;
                     continue;
                 }
                 
-                level.Agents.Add(pos, AgentType.Enemy);
+                runtimeLevel.Agents.Add(pos, AgentType.Enemy);
             }
             
-            return level;
+            return runtimeLevel;
             
         }
     }

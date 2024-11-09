@@ -9,7 +9,7 @@ namespace DefaultNamespace
         public void Move(Vector2Int dir)
         {
             var c = CurrentPos;
-            var test = Level.GetFirstAgentOrWall(c, dir);
+            var test = RuntimeLevel.GetFirstAgentOrWall(c, dir);
             if (test.agent == null)
             {
                 if (test.Item2 != c)
@@ -33,6 +33,11 @@ namespace DefaultNamespace
                 {
                     var duel = new Duel(this, pawn);
                     duel.Resolve();
+                }else if (agentWeHit is Exit)
+                {
+                    //yes, we can overlap this one!
+                    MoveAgent(test.Item2);
+                    Debug.Log("Exit! Yay!");
                 }
             }
         }

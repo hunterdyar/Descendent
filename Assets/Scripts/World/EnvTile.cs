@@ -2,5 +2,7 @@
 public enum EnvTile
 {
     Floor,
-    Wall
+    Wall,
+    Death,
+    Exit
 }

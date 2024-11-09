@@ -9,7 +9,7 @@ public class WorldCreator : MonoBehaviour
     [Header("Agents")]
     public GameObject _playerPrefab;
     public GameObject _enemyPrefab;
-    
+    public GameObject _exitPrefab;
     
     private Grid _grid;
 
@@ -23,9 +23,9 @@ public class WorldCreator : MonoBehaviour
         return _grid.CellToWorld(new Vector3Int(pos.x, pos.y, 0));
     }
 
-    public void Generate(GameManager gameManager, Level level)
+    public void Generate(GameManager gameManager, RuntimeLevel runtimeLevel)
     {
-        foreach (var envkvp in level.Environment)
+        foreach (var envkvp in runtimeLevel.Environment)
         {
             switch (envkvp.Value)
             {
@@ -38,7 +38,7 @@ public class WorldCreator : MonoBehaviour
             }
         }
         
-        foreach (var envkvp in level.Agents)
+        foreach (var envkvp in runtimeLevel.Agents)
         {
             switch (envkvp.Value)
             {
@@ -49,16 +49,19 @@ public class WorldCreator : MonoBehaviour
                     //how do we randomly decide how stronk they are?
                     SpawnAgent(_enemyPrefab, envkvp.Key, gameManager);
                     continue;
+                case AgentType.Exit:
+                    SpawnAgent(_exitPrefab, envkvp.Key, gameManager);
+                    continue;
             }
         }
 
-        SetCamera(level);
+        SetCamera(runtimeLevel);
         
     }
 
-    private void SetCamera(Level level)
+    private void SetCamera(RuntimeLevel runtimeLevel)
     {
-        var bounds = level.CalculateBounds();
+        var bounds = runtimeLevel.CalculateBounds();
         var centerGridPos = new Vector3Int((int)bounds.center.x, (int)bounds.center.y,0);
         var cam = Camera.main;
         var center = _grid.CellToWorld(centerGridPos);

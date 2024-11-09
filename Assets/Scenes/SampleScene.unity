@@ -658,6 +658,7 @@ MonoBehaviour:
   _wallTilePrefab: {fileID: 6866196003125151, guid: 5e6a657b2cc0846158d3f2392cd13813, type: 3}
   _playerPrefab: {fileID: 6866196003125151, guid: a7321efc7852a4788aacef7cfa0294ce, type: 3}
   _enemyPrefab: {fileID: 6866196003125151, guid: 9d6d787bf03ed41eea046c79af6168c5, type: 3}
+  _exitPrefab: {fileID: 6866196003125151, guid: 6f3ce13c936fde045994e218abe3e530, type: 3}
 --- !u!1 &1143612525
 GameObject:
   m_ObjectHideFlags: 0

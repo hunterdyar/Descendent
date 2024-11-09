@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DefaultNamespace;
 
-public class Level
+public class RuntimeLevel
 {
     //spawn data.
     public Dictionary<Vector2Int, EnvTile> Environment => _environment;
@@ -21,7 +21,7 @@ public class Level
     private Dictionary<GameAgentBase, Vector2Int> _gameAgentsPositionLookup;
 
     
-    public Level()
+    public RuntimeLevel()
     {
         _environment = new Dictionary<Vector2Int, EnvTile>();
         _initialAgents = new Dictionary<Vector2Int, AgentType>();
@@ -134,5 +134,38 @@ public class Level
     {
         var positions = _environment.Where(x=>x.Value == ofType).ToArray();
         return positions[UnityEngine.Random.Range(0, positions.Length)].Key;
+    }
+
+    public static RuntimeLevel FromProtoLevel(ProtoLevel pl)
+    {
+        var rl = new RuntimeLevel();
+        for(int x = 0;x<pl.Width;x++)
+        {
+            for (int y = 0; y < pl.Height; y++)
+            {
+                var pt = pl.Tiles[x, y];
+                if (pt == PTile.Floor)
+                {
+                    rl._environment.Add(new Vector2Int(x,y), EnvTile.Floor);
+                }else if (pt == PTile.Wall)
+                {
+                    rl._environment.Add(new Vector2Int(x, y), EnvTile.Wall);
+                }else if (pt == PTile.Exit)
+                {
+                    rl._environment.Add(new Vector2Int(x, y), EnvTile.Floor);
+                    rl._initialAgents.Add(new Vector2Int(x, y), AgentType.Exit);
+                }else
+                {
+                    throw new Exception($"Unknown tile type {pt}");
+                }
+            }
+        }
+
+        rl._initialAgents.Add(pl.PlayerStartLocation(), AgentType.Player);
+
+        
+        //add outer ring of walls?
+
+        return rl;
     }
 }

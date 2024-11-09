@@ -8,8 +8,8 @@ public class GameManager : MonoBehaviour
     public static Action<GameState> OnGameStateChanged;
     
     private GameState _state;
-    public Level Level => _level;
-    private Level _level;
+    public RuntimeLevel RuntimeLevel => _runtimeLevel;
+    private RuntimeLevel _runtimeLevel;
     public WorldCreator WorldCreator => worldCreator;
     [SerializeField] WorldCreator worldCreator;
    
@@ -25,8 +25,8 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         ChangeState(GameState.Generating);
-        _level = LevelFactory.CreateCircleLevel(10);
+        _runtimeLevel = LevelFactory.CreateRandomValidSquareLevel(5, 5, 1, 4);
         
-        worldCreator.Generate(this, _level);
+        worldCreator.Generate(this, _runtimeLevel);
     }
 }

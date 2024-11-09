@@ -2,7 +2,7 @@
     public enum AgentType
     {
         Treasure,
-        NextLevel,
+        Exit,
         Player,
         Enemy,
     }
