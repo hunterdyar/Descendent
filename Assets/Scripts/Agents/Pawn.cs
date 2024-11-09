@@ -8,9 +8,10 @@ public class Pawn : GameAgentBase
     [SerializeField] StatBlock _stats;
     [SerializeField] UIStatBlockOverlay _statsUI;
 
-    private void Start()
+    protected virtual void Start()
     {
         _statsUI?.Init(_stats);
+        
     }
 
     public void Die()
