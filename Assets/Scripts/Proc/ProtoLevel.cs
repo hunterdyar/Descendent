@@ -136,7 +136,7 @@ public class ProtoLevel
 	public static ProtoLevel CreateRandom(int width, int height, int walls, int exits)
 	{
 		ProtoLevel pLevel = new ProtoLevel();
-		pLevel._width = walls;
+		pLevel._width = width;
 		pLevel._height = height;
 		pLevel._tiles = new PTile[width, height];
 		for (int i = 0; i < walls; i++)
