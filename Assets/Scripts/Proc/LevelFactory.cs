@@ -8,10 +8,10 @@ namespace Proc
         {
             for (int i = 0; i < 1000; i++)
             {
-                var pl = ProtoLevel.CreateRandom(size, size, walls, exits);
+                var pl = ProtoLevel.CreateRandomStampLevel(size, size);
                 if (Solver.Solve(pl, minMoves))
                 {
-                    return RuntimeLevel.FromProtoLevel(pl);
+                    return RuntimeLevel.FromProtoLevel(pl, 4);
                 }
             }
             Debug.LogError("Unable to create random valid level.");

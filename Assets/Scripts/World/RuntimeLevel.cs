@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using DefaultNamespace;
+using Random = UnityEngine.Random;
 
 public class RuntimeLevel
 {
@@ -136,7 +137,7 @@ public class RuntimeLevel
         return positions[UnityEngine.Random.Range(0, positions.Length)].Key;
     }
 
-    public static RuntimeLevel FromProtoLevel(ProtoLevel pl)
+    public static RuntimeLevel FromProtoLevel(ProtoLevel pl, int createEnemiesAtRandomFloor=0)
     {
         var rl = new RuntimeLevel();
         for(int x = 0;x<pl.Width;x++)
@@ -163,6 +164,15 @@ public class RuntimeLevel
 
         rl._initialAgents.Add(pl.PlayerStartLocation(), AgentType.Player);
 
+        for (int i = 0; i < createEnemiesAtRandomFloor; i++)
+        {
+            var ePos= pl.GetRandomTile(PTile.Floor);
+            while (rl._initialAgents.ContainsKey(ePos))
+            {
+                ePos = pl.GetRandomTile(PTile.Floor);
+            }
+            rl._initialAgents.Add(ePos, AgentType.Enemy);
+        }
         
         //add outer ring of walls?
 

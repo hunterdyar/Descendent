@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         ChangeState(GameState.Generating);
-        _runtimeLevel = LevelFactory.CreateRandomValidSquareLevel(5, 5, 1, 4);
+        _runtimeLevel = LevelFactory.CreateRandomValidSquareLevel(10, 20, 1, 0);
         
         worldCreator.Generate(this, _runtimeLevel);
     }

@@ -20,7 +20,7 @@ namespace Proc
 						continue;
 					}
 					
-					if(validSolutions.Min(x=>x.Moves.Count) >= minMoves){
+					if(validSolutions.Min(level=>level.Moves.Count) >= minMoves){
 						return true;
 					}
 				}

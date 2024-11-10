@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using Random = UnityEngine.Random;
 
 public class ProtoLevel
 {
@@ -154,7 +156,7 @@ public class ProtoLevel
 		return pLevel;
 	}
 
-	private Vector2Int GetRandomTile(PTile floor)
+	public Vector2Int GetRandomTile(PTile floor)
 	{
 		int escape = _width * _height * 3;
 		while (escape > 0)
@@ -171,6 +173,56 @@ public class ProtoLevel
 		throw new Exception("Overflow Exception in GetRandomTile. Couldn't find tile");
 	}
 
+	public static ProtoLevel CreateRandomStampLevel(int width, int height)
+	{
+		ProtoLevel pLevel = new ProtoLevel();
+		pLevel._width = width;
+		pLevel._height = height;
+		pLevel._tiles = new PTile[width, height];
+		for (int x = 0; x < width; x++)
+		{
+			for (int y = 0; y < height; y++)
+			{
+				pLevel._tiles[x, y] = Wall;
+			}
+		}
+		
+		for (int i = 0; i < 11; i++)
+		{
+			pLevel.StampWalk(Random.Range(5,10));
+		}
+
+		int c = Random.Range(0, 2);
+		for (int i = 0; i <c; i++)
+		{
+			pLevel.StampRect(Floor,4);
+		}
+
+		c = Random.Range(5, 8);
+		for (int i = 0; i < c; i++)
+		{
+			pLevel.StampRect(Floor,3);
+		}
+
+		c = Random.Range(7, 9);
+		for (int i = 0; i < c; i++)
+		{
+			pLevel.StampRect(Floor,2);
+		}
+
+		for (int i = 0; i < 3; i++)
+		{
+			pLevel.StampRect(Wall,2);
+		}
+
+		pLevel._playerStart = pLevel.GetRandomTile(Floor);
+		
+		//pick a better exit for the floor with walk path.
+		pLevel.ChangeRandomTile(Floor, PTile.Exit);
+		//remove dead ends.
+		return pLevel;
+		
+	}
 	public static bool IsOppositeDir(PDir a, PDir b)
 	{
 		switch (a)
@@ -186,4 +238,62 @@ public class ProtoLevel
 		}
 		throw new Exception("Invalid Direction");
 	}
+
+	public void StampRect(PTile tile, int maxSize)
+	{
+		int startX = UnityEngine.Random.Range(0, _width-maxSize-1);
+		int startY = UnityEngine.Random.Range(0, _height-maxSize-1);
+		int width = UnityEngine.Random.Range(0, maxSize);
+		int height = UnityEngine.Random.Range(0, maxSize);
+
+		for (int x = startX; x < startX+width; x++)
+		{
+			for (int i = startY; i < startY+height; i++)
+			{
+				_tiles[x, i] = tile;
+			}
+		}
+	}
+
+	public void StampWalk(int maxLength, float chanceToTurn = 0.2f)
+	{
+		int centerPad = 1;
+		int startX = Random.Range(centerPad, _width - centerPad - 1);
+		int startY = Random.Range(centerPad, _height - centerPad - 1);
+		int x = startX;
+		int y = startY;
+		var d = Directions[UnityEngine.Random.Range(0, Directions.Length)];
+		for (int i = 0; i < maxLength; i++)
+		{
+			_tiles[x, y] = Floor;
+			if (Random.value > chanceToTurn)
+			{
+				d = Directions[UnityEngine.Random.Range(0, Directions.Length)];
+			}
+			switch (d)
+			{
+				case PDir.Up:
+					y++;
+					break;
+				case PDir.Down:
+					y--;
+					break;
+				case PDir.Left:
+					x--;
+					break;
+				case PDir.Right:
+					x++;
+					break;
+			}
+
+			//just restart if out-of-bounds.
+			if (x < 0 || y < 0 || x >= _width || y >= _height)
+			{
+				x = startX;
+				y = startY;
+			}
+		}
+
+	}
+	
 }
