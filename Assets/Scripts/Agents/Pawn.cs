@@ -16,8 +16,7 @@ public class Pawn : GameAgentBase
 
     public void Die()
     {
-        RuntimeLevel.RemoveAgent(this);
-        Destroy(gameObject);
+        base.Remove();
     }
 
     public void TakeDamage(int damage)

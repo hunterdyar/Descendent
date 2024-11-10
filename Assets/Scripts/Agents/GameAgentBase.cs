@@ -17,4 +17,10 @@ public class GameAgentBase : MonoBehaviour
         RuntimeLevel.MoveAgent(this, pos);
         transform.position = GameManager.WorldCreator.GridToWorld(pos);
     }
+
+    public void Remove()
+    {
+        RuntimeLevel.RemoveAgent(this);
+        Destroy(gameObject);
+    }
 }

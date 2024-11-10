@@ -33,9 +33,10 @@ namespace DefaultNamespace
                 {
                     var duel = new Duel(this, pawn);
                     duel.Resolve();
-                }else if (agentWeHit is Exit)
+                }else if (agentWeHit is Exit exit)
                 {
                     //yes, we can overlap this one!
+                    exit.Remove();
                     MoveAgent(test.Item2);
                     Debug.Log("Exit! Yay!");
                 }
