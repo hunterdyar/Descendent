@@ -11,7 +11,7 @@ namespace Proc
                 var pl = ProtoLevel.CreateRandomStampLevel(size, size);
                 if (Solver.Solve(pl, minMoves))
                 {
-                    return RuntimeLevel.FromProtoLevel(pl, 4);
+                    return RuntimeLevel.FromProtoLevel(pl, Random.Range(1,5));
                 }
             }
             Debug.LogError("Unable to create random valid level.");
