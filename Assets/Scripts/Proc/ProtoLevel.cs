@@ -21,7 +21,7 @@ public class ProtoLevel
 	private int _height;
 	private Vector2Int _playerStart;
 	private Vector2Int _playerLoc;
-	public Dictionary<Vector2Int, int> Visited = new Dictionary<Vector2Int, int>();
+	private readonly Dictionary<Vector2Int, int> _visited = new Dictionary<Vector2Int, int>();
 	public Vector2Int PlayerStartLocation()
 	{
 		return _playerStart;
@@ -37,8 +37,8 @@ public class ProtoLevel
 		int escape = _width * _height * 3;
 		while (escape > 0)
 		{
-			int x = UnityEngine.Random.Range(0, _width);
-			int y = UnityEngine.Random.Range(0, _height);
+			int x = Random.Range(0, _width);
+			int y = Random.Range(0, _height);
 			if (_tiles[x, y] == from)
 			{
 				_tiles[x, y] = to;
@@ -52,7 +52,7 @@ public class ProtoLevel
 		throw new Exception("Overflow Exception in ChangeRandomTile. Couldn't find tile");
 	}
 
-	public static (int x, int y) PDirToXY(PDir dir)
+	private static (int x, int y) PDirToXY(PDir dir)
 	{
 		switch (dir)
 		{
@@ -74,8 +74,8 @@ public class ProtoLevel
 		int escape = _width * _height * 3;
 		while (escape > 0)
 		{
-			int x = UnityEngine.Random.Range(0, _width);
-			int y = UnityEngine.Random.Range(0, _height);
+			int x = Random.Range(0, _width);
+			int y = Random.Range(0, _height);
 			if (_tiles[x, y] == floor)
 			{
 				return new Vector2Int(x, y);
@@ -88,10 +88,12 @@ public class ProtoLevel
 
 	public static ProtoLevel CreateRandomStampLevel(int width, int height)
 	{
-		ProtoLevel pLevel = new ProtoLevel();
-		pLevel._width = width;
-		pLevel._height = height;
-		pLevel._tiles = new PTile[width, height];
+		ProtoLevel pLevel = new ProtoLevel
+		{
+			_width = width,
+			_height = height,
+			_tiles = new PTile[width, height]
+		};
 		for (int x = 0; x < width; x++)
 		{
 			for (int y = 0; y < height; y++)
@@ -141,9 +143,9 @@ public class ProtoLevel
 		pLevel.CalculateWalkPath();
 		int fillCount = pLevel.FillUnwalkable();
 		Debug.Log($"{fillCount} dead tiles filled.");
-		//todo: this can't be the best way about getting this vlaue...
-		var end = pLevel.Visited.OrderByDescending(x=>x.Value).First().Key;
-		Debug.Log($"Exit placed on visited: {pLevel.Visited[end]}");
+		//todo: this can't be the best way about getting this value...
+		var end = pLevel._visited.OrderByDescending(x=>x.Value).First().Key;
+		Debug.Log($"Exit placed on visited: {pLevel._visited[end]}");
 		pLevel._tiles[end.x, end.y] = PTile.Exit;
  		return pLevel;
 	}
@@ -165,12 +167,12 @@ public class ProtoLevel
 		throw new Exception("Invalid Direction");
 	}
 
-	public void StampRect(PTile tile, int maxSize)
+	private void StampRect(PTile tile, int maxSize)
 	{
-		int startX = UnityEngine.Random.Range(0, _width-maxSize-1);
-		int startY = UnityEngine.Random.Range(0, _height-maxSize-1);
-		int width = UnityEngine.Random.Range(0, maxSize);
-		int height = UnityEngine.Random.Range(0, maxSize);
+		int startX = Random.Range(0, _width-maxSize-1);
+		int startY = Random.Range(0, _height-maxSize-1);
+		int width = Random.Range(0, maxSize);
+		int height = Random.Range(0, maxSize);
 
 		for (int x = startX; x < startX+width; x++)
 		{
@@ -181,20 +183,20 @@ public class ProtoLevel
 		}
 	}
 
-	public void StampWalk(int maxLength, float chanceToTurn = 0.2f)
+	private void StampWalk(int maxLength, float chanceToTurn = 0.2f)
 	{
 		int centerPad = 1;
 		int startX = Random.Range(centerPad, _width - centerPad - 1);
 		int startY = Random.Range(centerPad, _height - centerPad - 1);
 		int x = startX;
 		int y = startY;
-		var d = Directions[UnityEngine.Random.Range(0, Directions.Length)];
+		var d = Directions[Random.Range(0, Directions.Length)];
 		for (int i = 0; i < maxLength; i++)
 		{
 			_tiles[x, y] = Floor;
 			if (Random.value > chanceToTurn)
 			{
-				d = Directions[UnityEngine.Random.Range(0, Directions.Length)];
+				d = Directions[Random.Range(0, Directions.Length)];
 			}
 			switch (d)
 			{
@@ -221,7 +223,7 @@ public class ProtoLevel
 		}
 	}
 
-	public int RemoveDeadEnds()
+	private int RemoveDeadEnds()
 	{
 		int changed = 0;
 		//Fill any tile with 4 covered sides.
@@ -252,7 +254,7 @@ public class ProtoLevel
 				//Fill a tile on some nearby side.
 				while (true)
 				{
-					var d = Directions[UnityEngine.Random.Range(0, Directions.Length)];
+					var d = Directions[Random.Range(0, Directions.Length)];
 					var delta = PDirToXY(d);
 					int nextX = x + delta.x;
 					int nextY = y + delta.y;
@@ -337,7 +339,7 @@ public class ProtoLevel
 
 	private void CalculateWalkPath()
 	{
-		Visited.Clear();
+		_visited.Clear();
 		_walk = new int[_width, _height];
 		RecursiveCalculateWalkPath(_playerStart.x, _playerStart.y,1);
 	}
@@ -354,7 +356,7 @@ public class ProtoLevel
 		}
 		
 		// If the key already exists, TryAdd does nothing and returns false.
-		if (!Visited.TryAdd(startPos, steps))
+		if (!_visited.TryAdd(startPos, steps))
 		{
 			return;
 		}
@@ -373,7 +375,7 @@ public class ProtoLevel
 		}
 	}
 
-	public int RecursiveWalkSinglePlayerMove( ref int px, ref int py, int dx, int dy, int depth, int maxDepth, int c = 0)
+	private int RecursiveWalkSinglePlayerMove( ref int px, ref int py, int dx, int dy, int depth, int maxDepth, int c = 0)
 	{
 		if (dx == 0 && dy == 0)
 		{
