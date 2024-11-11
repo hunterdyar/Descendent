@@ -6,6 +6,7 @@ namespace DefaultNamespace
     public class Player : Pawn
     {
         public static Action<int> OnPlayerExperienceChange;
+
         public void Move(Vector2Int dir)
         {
             var c = CurrentPos;

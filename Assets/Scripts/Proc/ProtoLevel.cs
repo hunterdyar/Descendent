@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Unity.Burst.Intrinsics;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
 
 public class ProtoLevel
@@ -13,6 +16,8 @@ public class ProtoLevel
 
 	public PTile[,] Tiles => _tiles;
 	private PTile[,] _tiles;
+	public int[,] Walk => _walk;
+	private int[,] _walk;
 	public int Width => _width;
 	private int _width;
 	public int Height => _height;
@@ -27,7 +32,7 @@ public class ProtoLevel
 		return _playerStart;
 	}
 
-	public bool MoveDir(PDir dir)
+	public bool MoveDirSolver(PDir dir)
 	{
 		if (Solved)
 		{
@@ -35,7 +40,7 @@ public class ProtoLevel
 		}
 
 		var delta = PDirToXY(dir);
-		var c = RecursiveStepPlayerInDir(0,delta.x, delta.y);
+		var c = RecursiveStepPlayerInDirSolver(0,delta.x, delta.y);
 		if (Visited.Contains(_playerLoc))
 		{
 			return false;
@@ -59,7 +64,7 @@ public class ProtoLevel
 		};
 	}
 
-	public int RecursiveStepPlayerInDir(int c, int dx, int dy)
+	public int RecursiveStepPlayerInDirSolver(int c, int dx, int dy)
 	{
 		if (dx == 0 && dy == 0)
 		{
@@ -87,7 +92,7 @@ public class ProtoLevel
 		if (nextTile == Floor)
 		{
 			_playerLoc = next;
-			return RecursiveStepPlayerInDir(c+1, dx, dy);
+			return RecursiveStepPlayerInDirSolver(c+1, dx, dy);
 		}
 		
 
@@ -215,14 +220,26 @@ public class ProtoLevel
 			pLevel.StampRect(Wall,2);
 		}
 
-		pLevel._playerStart = pLevel.GetRandomTile(Floor);
 		
+		//remove dead ends.
+		int removedDeadEnds = pLevel.RemoveDeadEnds();
+		while (removedDeadEnds > 0)
+		{
+			removedDeadEnds = pLevel.RemoveDeadEnds();
+		}
+		
+		pLevel._playerStart = pLevel.GetRandomTile(Floor);
+
+		pLevel.CalculateWalkPath();
+		int fillCount = pLevel.FillUnwalkable();
+		Debug.Log($"{fillCount} dead tiles filled.");
 		//pick a better exit for the floor with walk path.
 		pLevel.ChangeRandomTile(Floor, PTile.Exit);
-		//remove dead ends.
-		return pLevel;
 		
+		return pLevel;
 	}
+
+	
 	public static bool IsOppositeDir(PDir a, PDir b)
 	{
 		switch (a)
@@ -293,7 +310,179 @@ public class ProtoLevel
 				y = startY;
 			}
 		}
+	}
 
+	public int RemoveDeadEnds()
+	{
+		int changed = 0;
+		//Fill any tile with 4 covered sides.
+		//Open a nearby tile for any with 3 or more sides filled.
+		for (int x = 0; x < _width; x++)
+		{
+			for (int y = 0; y < _height; y++)
+			{
+				if (_tiles[x, y] != Floor)
+				{
+					continue;
+				}
+				
+				//count sides
+				int c = CountSurroundingWalls(x, y);
+				
+				//Fill isolated squares.
+				if (c == 4)
+				{
+					changed++;
+					_tiles[x, y] = Wall;
+				}
+				
+				if (c < 3)
+				{
+					continue;
+				}
+				//Fill a tile on some nearby side.
+				while (true)
+				{
+					var d = Directions[UnityEngine.Random.Range(0, Directions.Length)];
+					var delta = PDirToXY(d);
+					int nextX = x + delta.x;
+					int nextY = y + delta.y;
+					if (nextX < 0 || nextX >= _width || nextY < 0 || nextY >= _height)
+					{
+						continue;
+					}
+					_tiles[nextX, nextY] = Floor;
+					changed++;
+					break;
+				}
+			}
+		}
+
+		return changed;
+	}
+
+	private int CountSurroundingWalls(int x, int y)
+	{
+		int count = 0;
+		if (x > 0)
+		{
+			//don't cast to int because exits/players/stuff will count wrong.
+			count += _tiles[x - 1, y] == PTile.Wall ? 1 : 0;
+		}
+		else
+		{
+			count++;
+		}
+		
+		if (x < _width-1)
+		{
+			count += _tiles[x + 1, y] == PTile.Wall ? 1 : 0;
+		}
+		else
+		{
+			count++;
+		}
+		
+		if (y > 0)
+		{
+			count += _tiles[x, y-1] == PTile.Wall ? 1 : 0;
+		}
+		else
+		{
+			count++;
+		}
+		if (y < _height-1)
+		{
+			count += _tiles[x, y+1] == PTile.Wall ? 1 : 0;
+		}
+		else
+		{
+			count++;
+		}
+
+		return count;
 	}
 	
+	private int FillUnwalkable()
+	{
+		if (_walk == null)
+		{
+			throw new NullReferenceException("Unable to fill unwalkable");
+		}
+
+		int count = 0;
+		for (int x = 0; x < _width; x++)
+		{
+			for (int y = 0; y < _height; y++)
+			{
+				if (_tiles[x,y] == Floor && _walk[x, y] == 0)
+				{
+					_tiles[x, y] = PTile.Wall;
+					count++;
+				}
+			}
+		}
+
+		return count;
+	}
+
+	private void CalculateWalkPath()
+	{
+		Visited = new List<Vector2Int>();
+		_walk = new int[_width, _height];
+		RecursiveCalculateWalkPath(_playerStart.x, _playerStart.y);
+		
+	}
+
+	private void RecursiveCalculateWalkPath(int playerX, int playerY)
+	{
+		var startPos = new Vector2Int(playerX, playerY);
+		if (Visited.Contains(startPos))
+		{
+			return;
+		}
+		Visited.Add(startPos);
+		foreach (var direction in Directions)
+		{
+			var delta = PDirToXY(direction);
+			int x = playerX;
+			int y = playerY;
+			RecursiveWalkSinglePlayerMove(ref x,ref y, delta.x,delta.y,0,25);
+			//do it again!
+			RecursiveCalculateWalkPath(x,y);
+		}
+	}
+
+	public void RecursiveWalkSinglePlayerMove(ref int px, ref int py, int dx, int dy, int depth, int maxDepth)
+	{
+		if (dx == 0 && dy == 0)
+		{
+			throw new Exception("Invalid Delta");
+		}
+
+		if (depth >= maxDepth)
+		{
+			return;
+		}
+
+		var nextx = px + dx;
+		int nexty = py + dy;
+		if (nextx < 0 || nextx >= _width || nexty < 0 || nexty >= _height)
+		{
+			return;
+		}
+		var nextTile = _tiles[nextx, nexty];
+		if (nextTile == Wall)
+		{
+			return;
+		}
+
+		if (nextTile == Floor)
+		{
+			px = nextx;
+			py = nexty;
+			_walk[px, py]++;
+			RecursiveWalkSinglePlayerMove(ref px,ref py, dx, dy,depth+1, maxDepth);
+		}
+	}
 }

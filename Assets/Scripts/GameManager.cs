@@ -24,9 +24,21 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        NewGame();
+    }
+
+    void NewGame()
+    {
         ChangeState(GameState.Generating);
         _runtimeLevel = LevelFactory.CreateRandomValidSquareLevel(10, 20, 1, 2);
-        
         worldCreator.Generate(this, _runtimeLevel);
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            NewGame();
+        }
     }
 }

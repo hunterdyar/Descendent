@@ -21,7 +21,6 @@ public class RuntimeLevel
     private Dictionary<Vector2Int, GameAgentBase> _gameAgentsMap;
     private Dictionary<GameAgentBase, Vector2Int> _gameAgentsPositionLookup;
 
-    
     public RuntimeLevel()
     {
         _environment = new Dictionary<Vector2Int, EnvTile>();
@@ -161,9 +160,9 @@ public class RuntimeLevel
                 }
             }
         }
-
+        
         rl._initialAgents.Add(pl.PlayerStartLocation(), AgentType.Player);
-
+        
         for (int i = 0; i < createEnemiesAtRandomFloor; i++)
         {
             var ePos= pl.GetRandomTile(PTile.Floor);

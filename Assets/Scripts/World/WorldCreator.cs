@@ -25,6 +25,7 @@ public class WorldCreator : MonoBehaviour
 
     public void Generate(GameManager gameManager, RuntimeLevel runtimeLevel)
     {
+        ClearCurrent();
         foreach (var envkvp in runtimeLevel.Environment)
         {
             switch (envkvp.Value)
@@ -59,6 +60,14 @@ public class WorldCreator : MonoBehaviour
         
     }
 
+    private void ClearCurrent()
+    {
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
+        }
+    }
+
     private void SetCamera(RuntimeLevel runtimeLevel)
     {
         var bounds = runtimeLevel.CalculateBounds();
@@ -80,4 +89,7 @@ public class WorldCreator : MonoBehaviour
         var agent = gen.GetComponent<GameAgentBase>();
         agent.Init(gameManager, gridPos);
     }
+
+
+    
 }

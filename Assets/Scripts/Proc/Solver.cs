@@ -8,7 +8,7 @@ namespace Proc
 	{
 		public static bool Solve(ProtoLevel proto, int minMoves)
 		{
-			//don't have a valid "start" directoin for the recursive search, so we have to start all four. This is ugly but whatever.
+			//don't have a valid "start" direction for the recursive search, so we have to start all four. This is ugly but whatever.
 			for (int i = 0; i < 4; i++)
 			{
 				var validSolutions = new List<ProtoLevel>();
@@ -42,7 +42,7 @@ namespace Proc
 				return true;
 			}
 			//try a move.
-			if (level.MoveDir(testDir))
+			if (level.MoveDirSolver(testDir))
 			{
 				//did we solve the puzzle? we're done!
 				if (level.Solved)
@@ -68,6 +68,7 @@ namespace Proc
 					{
 						//return false
 						//how to more exhaustively search?
+						return true;
 						continue;
 					}
 					else
