@@ -26,6 +26,10 @@ public class WorldCreator : MonoBehaviour
     public void Generate(GameManager gameManager, RuntimeLevel runtimeLevel)
     {
         ClearCurrent();
+        if (runtimeLevel.Environment == null)
+        {
+            return;
+        }
         foreach (var envkvp in runtimeLevel.Environment)
         {
             switch (envkvp.Value)

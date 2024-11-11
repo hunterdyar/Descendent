@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Unity.Burst.Intrinsics;
+using System.Linq;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
 
@@ -16,87 +14,17 @@ public class ProtoLevel
 
 	public PTile[,] Tiles => _tiles;
 	private PTile[,] _tiles;
-	public int[,] Walk => _walk;
 	private int[,] _walk;
 	public int Width => _width;
 	private int _width;
 	public int Height => _height;
 	private int _height;
-	public bool Solved { get; private set; }
 	private Vector2Int _playerStart;
 	private Vector2Int _playerLoc;
-	public List<PDir> Moves = new List<PDir>();
-	public List<Vector2Int> Visited = new List<Vector2Int>();
+	public Dictionary<Vector2Int, int> Visited = new Dictionary<Vector2Int, int>();
 	public Vector2Int PlayerStartLocation()
 	{
 		return _playerStart;
-	}
-
-	public bool MoveDirSolver(PDir dir)
-	{
-		if (Solved)
-		{
-			throw new Exception("Trying to move in already solved protoLevel");
-		}
-
-		var delta = PDirToXY(dir);
-		var c = RecursiveStepPlayerInDirSolver(0,delta.x, delta.y);
-		if (Visited.Contains(_playerLoc))
-		{
-			return false;
-		}
-		Visited.Add(_playerLoc);
-		Moves.Add(dir);
-		return c > 0;
-	}
-
-	public ProtoLevel Clone()
-	{
-		return new ProtoLevel()
-		{
-			_width = this._width,
-			_height = this._height,
-			_playerLoc = this._playerLoc,
-			_playerStart = _playerStart,
-			_tiles = this._tiles,
-			Moves = new List<PDir>(this.Moves),
-			Visited = new List<Vector2Int>(this.Visited),
-		};
-	}
-
-	public int RecursiveStepPlayerInDirSolver(int c, int dx, int dy)
-	{
-		if (dx == 0 && dy == 0)
-		{
-			throw new Exception("Invalid Delta");
-		}
-		
-		var next = _playerLoc + new Vector2Int(dx, dy);
-		if (next.x < 0 || next.x >= _width || next.y < 0 || next.y >= _height)
-		{
-			return c;
-		}
-		var nextTile = _tiles[next.x, next.y];
-		if (nextTile == Wall)
-		{
-			return c;
-		}
-
-		if (nextTile == PTile.Exit)
-		{
-			_playerLoc = next;
-			Solved = true;
-			return c;
-		}
-
-		if (nextTile == Floor)
-		{
-			_playerLoc = next;
-			return RecursiveStepPlayerInDirSolver(c+1, dx, dy);
-		}
-		
-
-		return c;
 	}
 	
 	public Vector2Int ChangeRandomTile(PTile from, PTile to)
@@ -140,27 +68,7 @@ public class ProtoLevel
 				throw new Exception("Invalid PDir");
 		}
 	}
-	public static ProtoLevel CreateRandom(int width, int height, int walls, int exits)
-	{
-		ProtoLevel pLevel = new ProtoLevel();
-		pLevel._width = width;
-		pLevel._height = height;
-		pLevel._tiles = new PTile[width, height];
-		for (int i = 0; i < walls; i++)
-		{
-			pLevel.ChangeRandomTile(Floor, Wall);
-		}
-
-		for (int i = 0; i < exits; i++)
-		{
-			pLevel.ChangeRandomTile(Floor, PTile.Exit);
-		}
-
-		pLevel._playerLoc = pLevel.GetRandomTile(Floor);
-		pLevel._playerStart = pLevel._playerLoc;
-		return pLevel;
-	}
-
+	
 	public Vector2Int GetRandomTile(PTile floor)
 	{
 		int escape = _width * _height * 3;
@@ -233,10 +141,11 @@ public class ProtoLevel
 		pLevel.CalculateWalkPath();
 		int fillCount = pLevel.FillUnwalkable();
 		Debug.Log($"{fillCount} dead tiles filled.");
-		//pick a better exit for the floor with walk path.
-		pLevel.ChangeRandomTile(Floor, PTile.Exit);
-		
-		return pLevel;
+		//todo: this can't be the best way about getting this vlaue...
+		var end = pLevel.Visited.OrderByDescending(x=>x.Value).First().Key;
+		Debug.Log($"Exit placed on visited: {pLevel.Visited[end]}");
+		pLevel._tiles[end.x, end.y] = PTile.Exit;
+ 		return pLevel;
 	}
 
 	
@@ -428,32 +337,43 @@ public class ProtoLevel
 
 	private void CalculateWalkPath()
 	{
-		Visited = new List<Vector2Int>();
+		Visited.Clear();
 		_walk = new int[_width, _height];
-		RecursiveCalculateWalkPath(_playerStart.x, _playerStart.y);
-		
+		RecursiveCalculateWalkPath(_playerStart.x, _playerStart.y,1);
 	}
 
-	private void RecursiveCalculateWalkPath(int playerX, int playerY)
+	private void RecursiveCalculateWalkPath(int playerX, int playerY, int steps)
 	{
 		var startPos = new Vector2Int(playerX, playerY);
-		if (Visited.Contains(startPos))
+		
+		//The player has already been here, so it's not a true stopping point.
+		//imagine moving into the middle of a wall. player has already been along it, it returns them to the path just like returning to the corner.
+		if (_walk[playerX, playerY] > 1)
 		{
 			return;
 		}
-		Visited.Add(startPos);
+		
+		// If the key already exists, TryAdd does nothing and returns false.
+		if (!Visited.TryAdd(startPos, steps))
+		{
+			return;
+		}
+
+		int nsteps = steps + 1;
 		foreach (var direction in Directions)
 		{
 			var delta = PDirToXY(direction);
 			int x = playerX;
 			int y = playerY;
-			RecursiveWalkSinglePlayerMove(ref x,ref y, delta.x,delta.y,0,25);
-			//do it again!
-			RecursiveCalculateWalkPath(x,y);
+			int distance = RecursiveWalkSinglePlayerMove(ref x,ref y, delta.x,delta.y,0,Mathf.Max(_width,_height));
+			if (distance > 0)
+			{
+				RecursiveCalculateWalkPath(x, y, nsteps);
+			}
 		}
 	}
 
-	public void RecursiveWalkSinglePlayerMove(ref int px, ref int py, int dx, int dy, int depth, int maxDepth)
+	public int RecursiveWalkSinglePlayerMove( ref int px, ref int py, int dx, int dy, int depth, int maxDepth, int c = 0)
 	{
 		if (dx == 0 && dy == 0)
 		{
@@ -462,19 +382,19 @@ public class ProtoLevel
 
 		if (depth >= maxDepth)
 		{
-			return;
+			return c;
 		}
 
 		var nextx = px + dx;
 		int nexty = py + dy;
 		if (nextx < 0 || nextx >= _width || nexty < 0 || nexty >= _height)
 		{
-			return;
+			return c;
 		}
 		var nextTile = _tiles[nextx, nexty];
 		if (nextTile == Wall)
 		{
-			return;
+			return c;
 		}
 
 		if (nextTile == Floor)
@@ -482,7 +402,9 @@ public class ProtoLevel
 			px = nextx;
 			py = nexty;
 			_walk[px, py]++;
-			RecursiveWalkSinglePlayerMove(ref px,ref py, dx, dy,depth+1, maxDepth);
+			return RecursiveWalkSinglePlayerMove(ref px,ref py, dx, dy,depth+1, maxDepth,c+1);
 		}
+
+		return c;
 	}
 }

@@ -6,16 +6,8 @@ namespace Proc
     {
         public static RuntimeLevel CreateRandomValidSquareLevel(int size, int walls, int exits, int minMoves)
         {
-            for (int i = 0; i < 1000; i++)
-            {
-                var pl = ProtoLevel.CreateRandomStampLevel(size, size);
-                if (Solver.Solve(pl, minMoves))
-                {
-                    return RuntimeLevel.FromProtoLevel(pl, Random.Range(1,5));
-                }
-            }
-            Debug.LogError("Unable to create random valid level.");
-            return null;
+            var pl = ProtoLevel.CreateRandomStampLevel(size, size);
+            return RuntimeLevel.FromProtoLevel(pl, 0);
         }
         
         public static RuntimeLevel CreateCircleLevel(int size)
