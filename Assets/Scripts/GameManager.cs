@@ -30,7 +30,9 @@ public class GameManager : MonoBehaviour
     void NewGame()
     {
         ChangeState(GameState.Generating);
-        _runtimeLevel = LevelFactory.CreateRandomValidSquareLevel(10, 20, 1, 2);
+        //_runtimeLevel = LevelFactory.CreateRandomValidSquareLevel(10, 20, 1, 2);
+        _runtimeLevel = LevelFactory.CreateDungeonLevels(15,1);
+
         worldCreator.Generate(this, _runtimeLevel);
     }
 

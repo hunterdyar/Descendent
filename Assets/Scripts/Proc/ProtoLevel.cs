@@ -88,6 +88,10 @@ public class ProtoLevel
 
 	public static ProtoLevel CreateRandomStampLevel(int width, int height)
 	{
+		if (width < 0 || height < 0)
+		{
+			throw new Exception("Invalid Dimensions to create stamp level.");
+		}
 		ProtoLevel pLevel = new ProtoLevel
 		{
 			_width = width,

@@ -136,6 +136,31 @@ public class RuntimeLevel
         return positions[UnityEngine.Random.Range(0, positions.Length)].Key;
     }
 
+    public void AddProtoLevel(ProtoLevel pl, Vector2Int offset)
+    {
+        for(int x = 0;x<pl.Width;x++)
+        {
+            for (int y = 0; y < pl.Height; y++)
+            {
+                var pt = pl.Tiles[x, y];
+                if (pt == PTile.Floor)
+                {
+                    _environment.Add(new Vector2Int(x,y)+offset, EnvTile.Floor);
+                }else if (pt == PTile.Wall)
+                {
+                    _environment.Add(new Vector2Int(x, y)+offset, EnvTile.Wall);
+                }else if (pt == PTile.Exit)
+                {
+                    _environment.Add(new Vector2Int(x, y)+offset, EnvTile.Floor);
+                    _initialAgents.Add(new Vector2Int(x, y)+offset, AgentType.Exit);
+                }else
+                {
+                    throw new Exception($"Unknown tile type {pt}");
+                }
+            }
+        }
+
+    }
     public static RuntimeLevel FromProtoLevel(ProtoLevel pl, int createEnemiesAtRandomFloor=0)
     {
         var rl = new RuntimeLevel();
