@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Proc;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -22,9 +23,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void Start()
+    IEnumerator Start()
     {
         NewGame();
+        while (true)
+        {
+            if (Input.GetKey(KeyCode.A))
+            {
+                NewGame();
+            }
+            yield return null;
+        }
     }
 
     void NewGame()

@@ -181,8 +181,8 @@ public class ProtoLevel
 		{
 			return;
 		}
-		int startX = Random.Range(0, _width-maxSize);
-		int startY = Random.Range(0, _height-maxSize);
+		int startX = Random.Range(0, _width-maxSize-1);
+		int startY = Random.Range(0, _height-maxSize-1);
 		
 		int width = Random.Range(0, maxSize);
 		int height = Random.Range(0, maxSize);
@@ -197,8 +197,9 @@ public class ProtoLevel
 			height = 1;
 			startY = 0;
 		}
-		if (startX < 0 || startY < 0 || startX >= _width || startY >= _height)
+		if (startX < 0 || startY < 0 || startX+width >= _width || startY+height >= _height)
 		{
+			Debug.LogWarning($"Invalid Input to StampRect. Node size is {_width}, {_height}");
 			return;
 		}
 		
