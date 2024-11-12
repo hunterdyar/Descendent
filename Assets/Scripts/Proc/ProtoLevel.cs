@@ -178,10 +178,22 @@ public class ProtoLevel
 			return;
 		}
 		int startX = Random.Range(0, _width-maxSize-1);
+		
 		int startY = Random.Range(0, _height-maxSize-1);
+		
 		int width = Random.Range(0, maxSize);
 		int height = Random.Range(0, maxSize);
 
+		if (_width == 1)
+		{
+			width = 1;
+			startX = 0;
+		}
+		if (_height == 1)
+		{
+			height = 1;
+			startY = 0;
+		}
 		if (startX < 0 || startY < 0 || startX >= _width || startY >= _height)
 		{
 			return;
@@ -204,7 +216,15 @@ public class ProtoLevel
 		}
 		int centerPad = 1;
 		int startX = Random.Range(centerPad, _width - centerPad - 1);
+		if (_width <= centerPad)
+		{
+			startX = 0;
+		}
 		int startY = Random.Range(centerPad, _height - centerPad - 1);
+		if (_height <= centerPad)
+		{
+			startY = 0;
+		}
 		int x = startX;
 		int y = startY;
 		var d = Directions[Random.Range(0, Directions.Length)];
@@ -269,8 +289,11 @@ public class ProtoLevel
 					continue;
 				}
 				//Fill a tile on some nearby side.
-				while (true)
+				//todo: precalculate all the permutations of directions and save them to an array. Select a single array randomly and loop through it.
+				int escape = 32;
+				while (escape>0)
 				{
+					escape--;
 					var d = Directions[Random.Range(0, Directions.Length)];
 					var delta = PDirToXY(d);
 					int nextX = x + delta.x;

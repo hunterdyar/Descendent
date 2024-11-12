@@ -136,7 +136,7 @@ namespace Proc
                 var points = new [] {
                     _position, _position + new Vector2Int(0, _size.y) , _position + new Vector2Int(_size.x, _size.y), _position+new Vector2Int(_size.x,0)
                 };
-                float s = _isLeaf ? 0.999f : 1f;
+                float s = _isLeaf ? 0.99f : 1f;
                 Gizmos.DrawLineStrip(points.Select(x=>gridToWorld.MultiplyPoint(new Vector3(x.x*s,x.y*s,0))).ToArray(),true);
             
             if (!_isLeaf)
