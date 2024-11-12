@@ -10,10 +10,10 @@ namespace Proc
             return RuntimeLevel.FromProtoLevel(pl, 0);
         }
 
-        public static RuntimeLevel CreateDungeonLevels(int size, int depth)
+        public static RuntimeLevel CreateDungeonLevels(int size, int depth, out BSPNode root)
         {
             var rl = new RuntimeLevel();
-            var root = BSPNode.Generate(depth, size,size);
+            root = BSPNode.Generate(depth, size,size);
             CreateAndAddProtosToNode(rl,root);
             return rl;
         }

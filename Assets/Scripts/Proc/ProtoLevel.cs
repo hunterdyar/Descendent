@@ -173,11 +173,20 @@ public class ProtoLevel
 
 	private void StampRect(PTile tile, int maxSize)
 	{
+		if (maxSize == 0)
+		{
+			return;
+		}
 		int startX = Random.Range(0, _width-maxSize-1);
 		int startY = Random.Range(0, _height-maxSize-1);
 		int width = Random.Range(0, maxSize);
 		int height = Random.Range(0, maxSize);
 
+		if (startX < 0 || startY < 0 || startX >= _width || startY >= _height)
+		{
+			return;
+		}
+		
 		for (int x = startX; x < startX+width; x++)
 		{
 			for (int i = startY; i < startY+height; i++)
@@ -189,6 +198,10 @@ public class ProtoLevel
 
 	private void StampWalk(int maxLength, float chanceToTurn = 0.2f)
 	{
+		if (maxLength == 0)
+		{
+			return;
+		}
 		int centerPad = 1;
 		int startX = Random.Range(centerPad, _width - centerPad - 1);
 		int startY = Random.Range(centerPad, _height - centerPad - 1);

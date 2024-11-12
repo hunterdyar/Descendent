@@ -12,6 +12,7 @@ public class WorldCreator : MonoBehaviour
     public GameObject _exitPrefab;
     
     private Grid _grid;
+    public Grid Grid => _grid;
 
     private void Awake()
     {
@@ -78,7 +79,11 @@ public class WorldCreator : MonoBehaviour
         var centerGridPos = new Vector3Int((int)bounds.center.x, (int)bounds.center.y,0);
         var cam = Camera.main;
         var center = _grid.CellToWorld(centerGridPos);
+        var dsizeint = bounds.max - bounds.min;
+        var dsize = _grid.CellToWorld(dsizeint);
         cam.transform.position = new Vector3(center.x, center.y, cam.transform.position.z);
+        cam.orthographicSize = dsize.magnitude / 2;
+
     }
 
     private void Spawn(GameObject prefab, Vector2Int gridPos)

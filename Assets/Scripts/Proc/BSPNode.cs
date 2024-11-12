@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Proc
@@ -64,12 +65,12 @@ namespace Proc
         }
 
         
-        public static BSPNode Generate(int depth, int width, int height)
+        public static BSPNode Generate(int maxDepth, int width, int height)
         {
             var root = new BSPNode(Vector2Int.zero, new Vector2Int(width, height));
-            if (depth > 0)
+            if (maxDepth > 0)
             {
-                RecursiveGenerate(root, 0, depth);
+                RecursiveGenerate(root, 0, maxDepth);
             }
 
             return root;
@@ -80,15 +81,14 @@ namespace Proc
             currentDepth++;
             if (currentDepth < maxDepth)
             {
-                if (!from.childA._isLeaf)
+                if (from._isLeaf)
                 {
-                    RecursiveGenerate(from.childA, currentDepth, maxDepth);
+                    //split failed.
+                    return;
                 }
 
-                if (!from.childB._isLeaf)
-                {
-                    RecursiveGenerate(from.childB, currentDepth, maxDepth);
-                }
+                RecursiveGenerate(from.childA, currentDepth, maxDepth);
+                RecursiveGenerate(from.childB, currentDepth, maxDepth);
             }
         }
 
@@ -128,6 +128,22 @@ namespace Proc
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public void DrawGizmos(Matrix4x4 gridToWorld)
+        {
+            Gizmos.color = _isLeaf ? Color.yellow : Color.magenta;
+                var points = new [] {
+                    _position, _position + new Vector2Int(0, _size.y) , _position + new Vector2Int(_size.x, _size.y), _position+new Vector2Int(_size.x,0)
+                };
+                float s = _isLeaf ? 0.999f : 1f;
+                Gizmos.DrawLineStrip(points.Select(x=>gridToWorld.MultiplyPoint(new Vector3(x.x*s,x.y*s,0))).ToArray(),true);
+            
+            if (!_isLeaf)
+            {
+                ChildA.DrawGizmos(gridToWorld);
+                ChildB.DrawGizmos(gridToWorld);
+            }
         }
     }
 }

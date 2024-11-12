@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
     private RuntimeLevel _runtimeLevel;
     public WorldCreator WorldCreator => worldCreator;
     [SerializeField] WorldCreator worldCreator;
-   
+    private BSPNode _lastNode;
     private void ChangeState(GameState newState)
     {
         if (_state != newState)
@@ -31,7 +31,7 @@ public class GameManager : MonoBehaviour
     {
         ChangeState(GameState.Generating);
         //_runtimeLevel = LevelFactory.CreateRandomValidSquareLevel(10, 20, 1, 2);
-        _runtimeLevel = LevelFactory.CreateDungeonLevels(15,1);
+        _runtimeLevel = LevelFactory.CreateDungeonLevels(15,2, out _lastNode);
 
         worldCreator.Generate(this, _runtimeLevel);
     }
@@ -41,6 +41,14 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             NewGame();
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (_lastNode != null)
+        {
+            _lastNode.DrawGizmos(transform.localToWorldMatrix);
         }
     }
 }
