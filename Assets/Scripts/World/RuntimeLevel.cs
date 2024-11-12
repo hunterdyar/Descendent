@@ -105,7 +105,7 @@ public class RuntimeLevel
         }
         GameAgentBase agent = null;
         var test = start;
-        while (agent == null)
+        while (true)
         {
             if (_environment.TryGetValue(test+direction, out var tile))
             {
@@ -191,9 +191,11 @@ public class RuntimeLevel
         for (int i = 0; i < createEnemiesAtRandomFloor; i++)
         {
             var ePos= pl.GetRandomTile(PTile.Floor);
-            while (rl._initialAgents.ContainsKey(ePos))
+            int escape = 1000;
+            while (rl._initialAgents.ContainsKey(ePos) && escape > 0)
             {
                 ePos = pl.GetRandomTile(PTile.Floor);
+                escape--;
             }
             rl._initialAgents.Add(ePos, AgentType.Enemy);
         }

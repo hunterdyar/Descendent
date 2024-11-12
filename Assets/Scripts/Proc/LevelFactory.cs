@@ -21,8 +21,11 @@ namespace Proc
         private static void CreateAndAddProtosToNode(RuntimeLevel rl, BSPNode node)
         {
             if(node.IsLeaf){
-                var pl = ProtoLevel.CreateRandomStampLevel(node.Size.x-1, node.Size.y-1);
-                rl.AddProtoLevel(pl,node.Position);
+                if (node.Size.x > 1 && node.Size.y > 1)
+                {
+                    var pl = ProtoLevel.CreateRandomStampLevel(node.Size.x, node.Size.y);
+                    rl.AddProtoLevel(pl, node.Position);
+                }
             }
             else
             {

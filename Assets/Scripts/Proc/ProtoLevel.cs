@@ -88,7 +88,7 @@ public class ProtoLevel
 
 	public static ProtoLevel CreateRandomStampLevel(int width, int height)
 	{
-		if (width < 0 || height < 0)
+		if (width <= 0 || height <= 0)
 		{
 			throw new Exception("Invalid Dimensions to create stamp level.");
 		}
@@ -106,6 +106,7 @@ public class ProtoLevel
 			}
 		}
 		
+		Debug.Log("Walks and Stamps");
 		for (int i = 0; i < 11; i++)
 		{
 			pLevel.StampWalk(Random.Range(5,10));
@@ -136,14 +137,17 @@ public class ProtoLevel
 
 		
 		//remove dead ends.
+		Debug.Log("Removing Dead Ends");
 		int removedDeadEnds = pLevel.RemoveDeadEnds();
 		while (removedDeadEnds > 0)
 		{
 			removedDeadEnds = pLevel.RemoveDeadEnds();
 		}
 		
+		Debug.Log("Picking Player Start for room");
 		pLevel._playerStart = pLevel.GetRandomTile(Floor);
 
+		Debug.Log("Calculating Walk Paths");
 		pLevel.CalculateWalkPath();
 		int fillCount = pLevel.FillUnwalkable();
 		Debug.Log($"{fillCount} dead tiles filled.");
@@ -177,9 +181,8 @@ public class ProtoLevel
 		{
 			return;
 		}
-		int startX = Random.Range(0, _width-maxSize-1);
-		
-		int startY = Random.Range(0, _height-maxSize-1);
+		int startX = Random.Range(0, _width-maxSize);
+		int startY = Random.Range(0, _height-maxSize);
 		
 		int width = Random.Range(0, maxSize);
 		int height = Random.Range(0, maxSize);
@@ -201,9 +204,10 @@ public class ProtoLevel
 		
 		for (int x = startX; x < startX+width; x++)
 		{
-			for (int i = startY; i < startY+height; i++)
+			for (int y = startY; y < startY+height; y++)
 			{
-				_tiles[x, i] = tile;
+				//todo: Detect why this is still sometimes out of range. 
+				_tiles[x, y] = tile;
 			}
 		}
 	}
@@ -231,7 +235,7 @@ public class ProtoLevel
 		for (int i = 0; i < maxLength; i++)
 		{
 			_tiles[x, y] = Floor;
-			if (Random.value > chanceToTurn)
+			if (Random.value < chanceToTurn)
 			{
 				d = Directions[Random.Range(0, Directions.Length)];
 			}
@@ -288,13 +292,12 @@ public class ProtoLevel
 				{
 					continue;
 				}
+				
 				//Fill a tile on some nearby side.
-				//todo: precalculate all the permutations of directions and save them to an array. Select a single array randomly and loop through it.
-				int escape = 32;
-				while (escape>0)
+				var dir = Proc.Utility.GetDirectionsShuffled();
+				for (int i = 0; i < 4; i++)
 				{
-					escape--;
-					var d = Directions[Random.Range(0, Directions.Length)];
+					var d = dir[i];
 					var delta = PDirToXY(d);
 					int nextX = x + delta.x;
 					int nextY = y + delta.y;
