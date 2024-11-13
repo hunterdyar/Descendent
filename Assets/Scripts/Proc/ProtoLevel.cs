@@ -181,6 +181,11 @@ public class ProtoLevel
 		{
 			return;
 		}
+
+		if (maxSize > _width || maxSize > _height)
+		{
+			maxSize = Mathf.Min(_width, _height);
+		}
 		int startX = Random.Range(0, _width-maxSize-1);
 		int startY = Random.Range(0, _height-maxSize-1);
 		

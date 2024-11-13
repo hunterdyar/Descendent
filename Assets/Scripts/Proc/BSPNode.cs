@@ -40,7 +40,7 @@ namespace Proc
                 int split = 2;
                 if (_size.x > 4)
                 {
-                    split = Random.Range(2, _size.x - 2);
+                    split = Random.Range(2, _size.x - 3);
                 }
                 var size = new Vector2Int(split, _size.y);
                 childA = new BSPNode(_position , size);
@@ -53,7 +53,7 @@ namespace Proc
                 int split = 2;
                 if (_size.y > 4)
                 {
-                    split = Random.Range(2, _size.y - 2);
+                    split = Random.Range(2, _size.y - 3);
                 }
                 
                 var size = new Vector2Int(_size.x, split);
