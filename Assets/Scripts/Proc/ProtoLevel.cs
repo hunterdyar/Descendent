@@ -21,6 +21,7 @@ public class ProtoLevel
 	private int _height;
 	private Vector2Int _playerStart;
 	private Vector2Int _playerLoc;
+	private List<Vector2Int> _required = new List<Vector2Int>();
 	private readonly Dictionary<Vector2Int, int> _visited = new Dictionary<Vector2Int, int>();
 	public Vector2Int PlayerStartLocation()
 	{
@@ -86,9 +87,9 @@ public class ProtoLevel
 		throw new Exception("Overflow Exception in GetRandomTile. Couldn't find tile");
 	}
 
-	public static ProtoLevel CreateRandomStampLevel(int width, int height)
+	public static ProtoLevel CreateRandomStampLevel(int width, int height, List<Vector2Int> requiredPlayerFloors = null)
 	{
-		if (width <= 0 || height <= 0)
+		if (width <= 1|| height <= 1)
 		{
 			throw new Exception("Invalid Dimensions to create stamp level.");
 		}
@@ -96,14 +97,21 @@ public class ProtoLevel
 		{
 			_width = width,
 			_height = height,
-			_tiles = new PTile[width, height]
+			_tiles = new PTile[width, height],
+			_required = requiredPlayerFloors ?? new List<Vector2Int>()
 		};
+		
 		for (int x = 0; x < width; x++)
 		{
 			for (int y = 0; y < height; y++)
 			{
 				pLevel._tiles[x, y] = Wall;
 			}
+		}
+
+		foreach (var pos in pLevel._required)
+		{
+			pLevel._tiles[pos.x, pos.y] = Floor;
 		}
 		
 		Debug.Log("Walks and Stamps");
@@ -290,8 +298,13 @@ public class ProtoLevel
 				//Fill isolated squares.
 				if (c == 4)
 				{
-					changed++;
-					_tiles[x, y] = Wall;
+					//only fill square if tile is not required.
+					if (!_required.Contains(new Vector2Int(x, y)))
+					{
+						changed++;
+						_tiles[x, y] = Wall;
+						continue;
+					}
 				}
 				
 				if (c < 3)

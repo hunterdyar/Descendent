@@ -31,9 +31,11 @@ namespace Proc
         private static void CreateAndAddProtosToNode(RuntimeLevel rl, BSPNode node, ref List<(BSPNode, ProtoLevel)> rooms)
         {
             if(node.IsLeaf){
-                if (node.Size.x > 1 && node.Size.y > 1)
+                if (node.Size.x > 2 && node.Size.y > 2)
                 {
-                    var pl = ProtoLevel.CreateRandomStampLevel(node.Size.x, node.Size.y);
+                    int xg = node.SplitHorizontal ? 1 : 0;
+                    int yg = node.SplitHorizontal ? 0 : 1;
+                    var pl = ProtoLevel.CreateRandomStampLevel(node.Size.x-xg, node.Size.y-yg);
                     rl.AddProtoLevel(pl, node.Position);
                     rooms.Add((node, pl));
                 }
@@ -43,7 +45,6 @@ namespace Proc
                 CreateAndAddProtosToNode(rl, node.ChildA, ref rooms);
                 CreateAndAddProtosToNode(rl, node.ChildB, ref rooms);
             }
-
         }
     }
 }

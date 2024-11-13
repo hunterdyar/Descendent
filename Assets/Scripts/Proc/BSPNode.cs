@@ -10,10 +10,14 @@ namespace Proc
         public bool IsLeaf => _isLeaf;
         private bool _isLeaf = true;
 
+        public bool SplitHorizontal => _splitHorizontal;
+        private bool _splitHorizontal;
         public BSPNode ChildA => childA;
         private BSPNode childA;
         public BSPNode ChildB => childB;
         private BSPNode childB;
+        public BSPNode Parent => _parent;
+        private BSPNode _parent;
 
         public Vector2Int Position => _position;
         /// <summary>
@@ -24,18 +28,19 @@ namespace Proc
         private Vector2Int _size;
 
         // private ProtoLevel protoLevel;
-        public BSPNode(Vector2Int position, Vector2Int size)
+        public BSPNode(Vector2Int position, Vector2Int size, BSPNode parent = null)
         {
             _position = position;
             _size = size;
             _isLeaf = true;
+            _parent = parent;
         }
         
         public void Split()
         {
             _isLeaf = false;
-            bool horizontal = Random.value < 0.5f;
-            if (horizontal)
+            _splitHorizontal = Random.value < 0.5f;
+            if (_splitHorizontal)
             {
                 int split = 2;
                 if (_size.x > 4)
@@ -43,10 +48,10 @@ namespace Proc
                     split = Random.Range(2, _size.x - 3);
                 }
                 var size = new Vector2Int(split, _size.y);
-                childA = new BSPNode(_position , size);
+                childA = new BSPNode(_position, size, this);
            
                 size = new Vector2Int(_size.x-split, _size.y);
-                childB = new BSPNode(new Vector2Int(_position.x+split, _position.y), size);
+                childB = new BSPNode(new Vector2Int(_position.x+split, _position.y), size, this);
             }   
             else
             {
