@@ -191,8 +191,7 @@ public class ProtoLevel
 			removedDeadEnds = pLevel.RemoveDeadEnds();
 		}
 
-
-		
+		//oddly enough, picking this start position is doing a really good job ensuring the levels are unplayable, lol.
 		Debug.Log("Picking Player Start for room");
 		pLevel._playerStart = pLevel._required.First();
 

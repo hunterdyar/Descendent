@@ -1,8 +1,12 @@
 using System;
+using Camera;
+using Unity.Cinemachine;
 using UnityEngine;
 
 public class WorldCreator : MonoBehaviour
 {
+    [Header("Scene References")]
+    public CameraManager _camera;
     [Header("Tiles")]
     public GameObject _floorTilePrefab;
     public GameObject _wallTilePrefab;
@@ -61,8 +65,7 @@ public class WorldCreator : MonoBehaviour
             }
         }
 
-        SetCamera(runtimeLevel);
-        
+        _camera.SetCamera(_grid, runtimeLevel);
     }
 
     private void ClearCurrent()
@@ -73,18 +76,7 @@ public class WorldCreator : MonoBehaviour
         }
     }
 
-    private void SetCamera(RuntimeLevel runtimeLevel)
-    {
-        var bounds = runtimeLevel.CalculateBounds();
-        var centerGridPos = new Vector3Int((int)bounds.center.x, (int)bounds.center.y,0);
-        var cam = Camera.main;
-        var center = _grid.CellToWorld(centerGridPos);
-        var dsizeint = bounds.max - bounds.min;
-        var dsize = _grid.CellToWorld(dsizeint);
-        cam.transform.position = new Vector3(center.x, center.y, cam.transform.position.z);
-        cam.orthographicSize = dsize.magnitude / 2;
-
-    }
+   
 
     private void Spawn(GameObject prefab, Vector2Int gridPos)
     {

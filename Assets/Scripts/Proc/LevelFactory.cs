@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DefaultNamespace;
 using UnityEngine;
 
 namespace Proc
@@ -18,8 +19,13 @@ namespace Proc
             List<(BSPNode node, ProtoLevel level)> rooms = new List<(BSPNode, ProtoLevel)>();
             root = BSPNode.Generate(depth, size,size);
             CreateAndAddProtosToNode(rl,root, ref rooms);
-            
-            //Create Connections between each split node.
+
+            foreach (var room in rooms)
+            {
+                RoomData data = new RoomData(room.node.Position, room.node.Size);
+                //todo: move to an AddRoom function in runtimelevel
+                rl.Rooms.Add(data);
+            }
             
             //pick one room to be starting and add the player to it. Pick a far away node and add exit to it.
             var startingRoom = rooms[Random.Range(0, rooms.Count)];

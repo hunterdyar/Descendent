@@ -6,9 +6,11 @@ namespace DefaultNamespace
     public class Player : Pawn
     {
         public static Action<int> OnPlayerExperienceChange;
-
+        public static Action<Vector2Int> OnPlayerPositionChange;
+        
         public void Move(Vector2Int dir)
         {
+            bool moved = false;
             var c = CurrentPos;
             var test = RuntimeLevel.GetFirstAgentOrWall(c, dir);
             if (test.agent == null)
@@ -16,6 +18,7 @@ namespace DefaultNamespace
                 if (test.Item2 != c)
                 {
                    MoveAgent(test.Item2);
+                   moved = true;
                 }
             }
             else
@@ -27,6 +30,7 @@ namespace DefaultNamespace
                 if (test.Item2-dir != c)
                 {
                     MoveAgent(test.Item2 - dir);
+                    moved = true;
                 }
 
                 //FIGHT
@@ -39,8 +43,13 @@ namespace DefaultNamespace
                     //yes, we can overlap this one!
                     exit.Remove();
                     MoveAgent(test.Item2);
-                    Debug.Log("Exit! Yay!");
+                    moved = true;
                 }
+            }
+
+            if (moved)
+            {
+                OnPlayerPositionChange?.Invoke(CurrentPos);
             }
         }
 

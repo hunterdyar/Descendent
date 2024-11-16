@@ -28,7 +28,7 @@ public class GameManager : MonoBehaviour
         NewGame();
         while (true)
         {
-            if (Input.GetKey(KeyCode.A))
+            if (Input.GetKey(KeyCode.N))
             {
                 NewGame();
             }

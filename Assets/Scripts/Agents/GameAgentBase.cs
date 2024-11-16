@@ -5,7 +5,7 @@ public class GameAgentBase : MonoBehaviour
     protected GameManager GameManager => _gameManager;
     private GameManager _gameManager;
     protected RuntimeLevel RuntimeLevel => _gameManager.RuntimeLevel;
-    protected Vector2Int CurrentPos => _gameManager.RuntimeLevel.GetPosition(this);
+    public Vector2Int CurrentPos => _gameManager.RuntimeLevel.GetPosition(this);
     public void Init(GameManager gameManager, Vector2Int gridPos)
     {
         _gameManager = gameManager;

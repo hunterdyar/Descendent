@@ -21,12 +21,14 @@ public class RuntimeLevel
     private Dictionary<Vector2Int, GameAgentBase> _gameAgentsMap;
     private Dictionary<GameAgentBase, Vector2Int> _gameAgentsPositionLookup;
 
+    public readonly List<RoomData> Rooms;
     public RuntimeLevel()
     {
         _environment = new Dictionary<Vector2Int, EnvTile>();
         _initialAgents = new Dictionary<Vector2Int, AgentType>();
         _gameAgentsMap = new Dictionary<Vector2Int, GameAgentBase>();
         _gameAgentsPositionLookup = new Dictionary<GameAgentBase, Vector2Int>();
+        Rooms = new List<RoomData>();
     }
 
     public BoundsInt CalculateBounds()
@@ -203,5 +205,10 @@ public class RuntimeLevel
         //add outer ring of walls?
 
         return rl;
+    }
+
+    public Player GetPlayer()
+    {
+        return _gameAgentsMap.Values.FirstOrDefault(x => x is Player) as Player;
     }
 }
