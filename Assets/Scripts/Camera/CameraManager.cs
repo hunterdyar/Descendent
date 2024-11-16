@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DefaultNamespace;
+using NUnit.Framework.Internal.Filters;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -9,13 +10,11 @@ namespace Camera
 {
 	public class CameraManager : MonoBehaviour
 	{
-		private CinemachineMixingCamera _camera;
 		[Header("Config")] public CinemachineCamera _roomPrefab;
 		
 		private Dictionary<RoomData, CinemachineCamera> _camMap = new Dictionary<RoomData, CinemachineCamera>();
 		private void Awake()
 		{
-			_camera = GetComponent<CinemachineMixingCamera>();
 		}
 
 		private void OnEnable()
@@ -30,39 +29,30 @@ namespace Camera
 
 		void OnPlayerPositionChange(Vector2Int pos)
 		{
-			var r = GetRoom(pos);
-			if (r != null)
+			foreach (var kvp in _camMap)
 			{
-				var c = _camMap[r];
-				for (int i = 0; i < transform.childCount; i++)
+				if (kvp.Key.Contains(pos))
 				{
-					_camera.SetWeight(i, 0);
+					kvp.Value.Priority = 10;
 				}
-
-				_camera.SetWeight(c, 1);
+				else
+				{
+					kvp.Value.Priority = 0;
+				}
 			}
 		}
 
-		RoomData GetRoom(Vector2Int pos)
-		{
-			foreach (var key in _camMap.Keys)
-			{
-				if (key.Contains(pos))
-				{
-					return key;
-				}
-			}
-
-			return null;
-		}
+		
 
 		public void SetCamera(Grid grid, RuntimeLevel runtimeLevel)
 		{
 			Clear();
+			var player = runtimeLevel.GetPlayer();
 			foreach (var rom in runtimeLevel.Rooms)
 			{
-				var cam = Instantiate(_roomPrefab, _camera.transform);
-				_camMap.Add(rom,cam);
+				var cam = Instantiate(_roomPrefab, transform);
+				_camMap.Add(rom, cam);
+				cam.Follow = player.transform;
 				var centerGridPos = (Vector3Int)(rom.Position + rom.Size / 2);
 				var center = grid.CellToWorld(centerGridPos) + grid.cellSize / 2f; //left to center offset
 				var dsizeint = (Vector3Int)rom.Size;
@@ -75,7 +65,6 @@ namespace Camera
 			}
 
 			var p = runtimeLevel.GetPlayer();
-			_camera.Follow = p.transform;
 			OnPlayerPositionChange(p.CurrentPos);
 		}
 
