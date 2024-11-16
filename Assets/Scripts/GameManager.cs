@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using Proc;
 using UnityEngine;
-using UnityEngine.Serialization;
+using Random = UnityEngine.Random;
 
 public class GameManager : MonoBehaviour
 {
@@ -41,7 +41,7 @@ public class GameManager : MonoBehaviour
         ChangeState(GameState.Generating);
         //_runtimeLevel = LevelFactory.CreateRandomValidSquareLevel(10, 20, 1, 2);
         //node just used for gizmo drawing.
-        _runtimeLevel = LevelFactory.CreateDungeonLevels(20,2, out _lastNode);
+        _runtimeLevel = LevelFactory.CreateDungeonLevels(Random.Range(20,50),3, out _lastNode);
 
         worldCreator.Generate(this, _runtimeLevel);
     }

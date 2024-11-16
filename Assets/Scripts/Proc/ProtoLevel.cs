@@ -87,6 +87,41 @@ public class ProtoLevel
 		throw new Exception("Overflow Exception in GetRandomTile. Couldn't find tile");
 	}
 
+	public static ProtoLevel CreateSolidLevel(int width, int height, List<Vector2Int> required)
+	{
+		if (width <= 1 || height <= 1)
+		{
+			throw new Exception("Invalid Dimensions to create stamp level.");
+		}
+
+		ProtoLevel pLevel = new ProtoLevel
+		{
+			_width = width,
+			_height = height,
+			_tiles = new PTile[width, height],
+			_required = required ?? new List<Vector2Int>()
+		};
+		for (var x = 0; x < width; x++)
+		{
+			for (var y = 0; y < height; y++)
+			{
+				pLevel._tiles[x, y] = Wall;
+			}
+		}
+
+		foreach (var r in pLevel._required)
+		{
+			if (r.x < 0 || r.x >= width || r.y < 0 || r.y >= height)
+			{
+				//this is... no longer a problem?
+				//Debug.LogWarning($"Connection point out of bounds: p {r.x}, {r.y}; s {width}, {height}");
+				continue;
+			}
+			pLevel._tiles[r.x, r.y] = Floor;
+		}
+
+		return pLevel;
+	}
 	public static ProtoLevel CreateRandomStampLevel(int width, int height, List<Vector2Int> requiredPlayerFloors = null)
 	{
 		if (width <= 1|| height <= 1)
@@ -111,13 +146,17 @@ public class ProtoLevel
 
 		foreach (var pos in pLevel._required)
 		{
+			if (pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height)
+			{
+				continue;
+			}
 			pLevel._tiles[pos.x, pos.y] = Floor;
 		}
-		
-		Debug.Log("Walks and Stamps");
+
+
 		for (int i = 0; i < 11; i++)
 		{
-			pLevel.StampWalk(Random.Range(5,10));
+			pLevel.StampWalk(Random.Range(5,Random.value < 0.5f ? pLevel._width : pLevel._height));
 		}
 
 		int c = Random.Range(0, 2);
@@ -143,7 +182,7 @@ public class ProtoLevel
 			pLevel.StampRect(Wall,2);
 		}
 
-		
+
 		//remove dead ends.
 		Debug.Log("Removing Dead Ends");
 		int removedDeadEnds = pLevel.RemoveDeadEnds();
@@ -151,12 +190,18 @@ public class ProtoLevel
 		{
 			removedDeadEnds = pLevel.RemoveDeadEnds();
 		}
+
+
 		
 		Debug.Log("Picking Player Start for room");
-		pLevel._playerStart = pLevel.GetRandomTile(Floor);
+		pLevel._playerStart = pLevel._required.First();
 
 		Debug.Log("Calculating Walk Paths");
 		pLevel.CalculateWalkPath();
+		
+		//todo: if the required tiles that are in this level are not in the walkpath, then we failed.
+		//Can we interset the walk paths where the player starts at every valid node?
+		
 		int fillCount = pLevel.FillUnwalkable();
 		Debug.Log($"{fillCount} dead tiles filled.");
 		//todo: this can't be the best way about getting this value...

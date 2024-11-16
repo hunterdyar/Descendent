@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Proc
@@ -31,19 +32,48 @@ namespace Proc
         private static void CreateAndAddProtosToNode(RuntimeLevel rl, BSPNode node, ref List<(BSPNode, ProtoLevel)> rooms)
         {
             if(node.IsLeaf){
-                if (node.Size.x > 2 && node.Size.y > 2)
+                if (node.Size.x >= 2 && node.Size.y >= 2)
                 {
-                    int xg = node.SplitHorizontal ? 1 : 0;
-                    int yg = node.SplitHorizontal ? 0 : 1;
-                    var pl = ProtoLevel.CreateRandomStampLevel(node.Size.x-xg, node.Size.y-yg);
+                   // int xg = node.SplitHorizontal ? 1 : 0;
+                    //int yg = node.SplitHorizontal ? 0 : 1;
+                    int xg=0, yg = 0;
+                    var connectionPoints = new List<Vector2Int>();
+                    GetConnectionPoints(node, ref connectionPoints);
+                    connectionPoints = connectionPoints.Select(x => x - node.Position).ToList();
+                   // var pl = ProtoLevel.CreateSolidLevel(node.Size.x - xg, node.Size.y - yg, connectionPoints);
+                    var pl = ProtoLevel.CreateRandomStampLevel(node.Size.x - xg, node.Size.y - yg, connectionPoints);
+
+                    //todo: debugging
+                    //var pl = ProtoLevel.CreateRandomStampLevel(node.Size.x-xg, node.Size.y-yg);
                     rl.AddProtoLevel(pl, node.Position);
                     rooms.Add((node, pl));
+                }
+                else
+                {
+                    Debug.LogWarning("node size too small!");
                 }
             }
             else
             {
+                foreach (var internalConnectionPoint in node.InternalConnectionPoints)
+                {
+                    rl.Environment.Add(internalConnectionPoint, EnvTile.Floor);
+                }
                 CreateAndAddProtosToNode(rl, node.ChildA, ref rooms);
                 CreateAndAddProtosToNode(rl, node.ChildB, ref rooms);
+            }
+        }
+
+        /// <summary>
+        /// recursively walk up the tree to get points. This can be cached and optimized or done at creation... but it's fine for now.
+        /// </summary>
+
+        private static void GetConnectionPoints(BSPNode node, ref List<Vector2Int> connectionPoints)
+        {
+            connectionPoints.Add(node.ConnectionPoint);
+            if (node.Parent != null)
+            {
+                GetConnectionPoints(node.Parent, ref connectionPoints);
             }
         }
     }

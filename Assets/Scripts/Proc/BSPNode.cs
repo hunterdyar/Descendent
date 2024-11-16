@@ -27,6 +27,11 @@ namespace Proc
         public Vector2Int Size => _size;
         private Vector2Int _size;
 
+        public Vector2Int ConnectionPoint => _connectionPoint;
+        private Vector2Int _connectionPoint;
+
+        public List<Vector2Int> InternalConnectionPoints => _internalConnectionPoints;
+        private readonly List<Vector2Int> _internalConnectionPoints = new List<Vector2Int>();
         // private ProtoLevel protoLevel;
         public BSPNode(Vector2Int position, Vector2Int size, BSPNode parent = null)
         {
@@ -36,37 +41,57 @@ namespace Proc
             _parent = parent;
         }
         
-        public void Split()
+        public bool Split()
         {
+            if (_size.x <= 4 || _size.y <= 4)
+            {
+                return false;
+            }
+            
             _isLeaf = false;
             _splitHorizontal = Random.value < 0.5f;
             if (_splitHorizontal)
             {
-                int split = 2;
-                if (_size.x > 4)
+                int split = 3;
+                if (_size.x > 5)
                 {
-                    split = Random.Range(2, _size.x - 3);
+                    split = Random.Range(3, _size.x - 3);
                 }
-                var size = new Vector2Int(split, _size.y);
+                //todo: we can't split on the line that is the parents connection point, which should be in it's _internal...
+                
+                var connection = new Vector2Int(_position.x + split-1, _position.y+Random.Range(0, _size.y));
+                _internalConnectionPoints.Add(connection);
+                
+                var size = new Vector2Int(split-1, _size.y);
                 childA = new BSPNode(_position, size, this);
-           
+                childA._connectionPoint = connection - Vector2Int.right;
+                
                 size = new Vector2Int(_size.x-split, _size.y);
                 childB = new BSPNode(new Vector2Int(_position.x+split, _position.y), size, this);
+                childB._connectionPoint = connection + Vector2Int.right;
+
             }   
             else
             {
-                int split = 2;
-                if (_size.y > 4)
+                int split = 3;
+                if (_size.y > 5)
                 {
-                    split = Random.Range(2, _size.y - 3);
+                    split = Random.Range(3, _size.y - 3);
                 }
+
+                var connection = new Vector2Int(_position.x+ Random.Range(0, _size.x), _position.y + split -1);
+                _internalConnectionPoints.Add(connection);
                 
-                var size = new Vector2Int(_size.x, split);
-                childA = new BSPNode(_position , size);
-           
+                var size = new Vector2Int(_size.x, split-1);
+                childA = new BSPNode(_position , size, this);
+                childA._connectionPoint = connection + Vector2Int.down;
+                
                 size = new Vector2Int(_size.x, _size.y-split);
-                childB = new BSPNode(new Vector2Int(_position.x, _position.y+split), size);
+                childB = new BSPNode(new Vector2Int(_position.x, _position.y+split), size, this);
+                childB._connectionPoint = connection + Vector2Int.up;
             }
+
+            return true;
         }
 
         
