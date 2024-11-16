@@ -41,7 +41,7 @@ namespace Proc
             _parent = parent;
         }
         
-        public bool Split()
+        public bool Split(float maxRatio = 2)
         {
             if (_size.x <= 4 || _size.y <= 4)
             {
@@ -49,7 +49,19 @@ namespace Proc
             }
             
             _isLeaf = false;
-            _splitHorizontal = Random.value < 0.5f;
+            //force a split alkong the long-side if it's greater than the ratio (not too thin in either dimension)
+            //todo: I might have this backwards? It's honestly hard to tell because it doesn't enforce the child dimensions, it inforces one layer up from any leaf node only.
+            //e.g. It my still split into a thin node.
+            if (_size.x*maxRatio < _size.y)
+            {
+                _splitHorizontal = false;
+            }
+            else if (_size.y*maxRatio < _size.x)
+            {
+                _splitHorizontal = true;
+            }else{
+                _splitHorizontal = Random.value < 0.5f;
+            }
             if (_splitHorizontal)
             {
                 int split = 3;
