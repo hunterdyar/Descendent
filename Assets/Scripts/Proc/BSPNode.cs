@@ -187,5 +187,17 @@ namespace Proc
                 ChildB.DrawGizmos(gridToWorld);
             }
         }
+
+        /// <summary>
+        /// recursively walk up the tree to get points. This can be cached and optimized or done at creation... but it's fine for now.
+        /// </summary>
+        public static void GetConnectionPoints(BSPNode node, ref List<Vector2Int> connectionPoints)
+        {
+            connectionPoints.Add(node.ConnectionPoint);
+            if (node.Parent != null)
+            {
+                GetConnectionPoints(node.Parent, ref connectionPoints);
+            }
+        }
     }
 }

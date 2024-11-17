@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Proc;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
@@ -21,12 +22,138 @@ public class ProtoLevel
 	private int _height;
 	private Vector2Int _playerStart;
 	private Vector2Int _playerLoc;
-	private List<Vector2Int> _required = new List<Vector2Int>();
+	private List<Vector2Int> _required;
 	private readonly Dictionary<Vector2Int, int> _visited = new Dictionary<Vector2Int, int>();
+
+	private BSPNode _bsp;
+	public ProtoLevel(BSPNode root = null)
+	{
+		_bsp = root;
+		_width = _bsp.Size.x;
+		_height = _bsp.Size.y;
+		_tiles = new PTile[_width, _height];
+		_walk = new int[_width, _height];
+		//todo: wait, this isn't... true? i have to dig into children i think
+		_required = _bsp.InternalConnectionPoints;
+	}
+
+	public void Generate()
+	{
+		//recursively slap some data down into our rooms
+		StampBSPRoom(_bsp);
+		
+		//remove dead ends.
+		Debug.Log("Removing Dead Ends");
+		int removedDeadEnds = RemoveDeadEnds();
+		while (removedDeadEnds > 0)
+		{
+			removedDeadEnds = RemoveDeadEnds();
+		}
+
+		Debug.Log("Calculating Walk Paths");
+		CalculateWalkPath();
+
+		//todo: if the required tiles that are in this level are not in the walkpath, then we failed.
+		//Can we interset the walk paths where the player starts at every valid node?
+
+		int fillCount = FillUnwalkable();
+	}
+
+	private void StampBSPRoom(BSPNode node)
+	{
+		if (node.IsLeaf)
+		{
+			if (node.Size.x >= 2 && node.Size.y >= 2)
+			{
+				var connectionPoints = new List<Vector2Int>();
+				BSPNode.GetConnectionPoints(node, ref connectionPoints);
+				// var pl = ProtoLevel.CreateSolidLevel(node.Size.x - xg, node.Size.y - yg, connectionPoints);
+				StampSingleRoom(node.Position, node.Size, connectionPoints);
+			}
+			else
+			{
+				Debug.LogWarning("node size too small!");
+			}
+		}
+		else
+		{
+			//gaps between the floors.
+			foreach (var internalConnectionPoint in node.InternalConnectionPoints)
+			{
+				_tiles[internalConnectionPoint.x, internalConnectionPoint.y] = Floor;
+			}
+
+			StampBSPRoom(node.ChildA);
+			StampBSPRoom(node.ChildB);
+		}
+	}
+
+	private void StampSingleRoom(Vector2Int position, Vector2Int size, List<Vector2Int> connectionPoints)
+	{
+		int width = size.x;
+		int height = size.y;
+		int px = position.x;
+		int py = position.y;
+		if (width <= 1|| height <= 1)
+		{
+			throw new Exception("Invalid Dimensions to create stamp level.");
+		}
+
+		var required = connectionPoints ?? new List<Vector2Int>();
+		
+		for (int x = px; x < width; x++)
+		{
+			for (int y = py; y < height; y++)
+			{
+				_tiles[x, y] = Wall;
+			}
+		}
+
+		// foreach (var pos in required)
+		// {
+		// 	if (pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height)
+		// 	{
+		// 		continue;
+		// 	}
+		// 	_tiles[pos.x, pos.y] = Floor;
+		// }
+
+
+		for (int i = 0; i < 11; i++)
+		{
+			StampWalk(position, size, Random.Range(5,Random.value < 0.5f ? _width : _height));
+		}
+
+		// int c = Random.Range(0, 2);
+		// for (int i = 0; i <c; i++)
+		// {
+		// 	StampRect(position, size, Floor,4);
+		// }
+		//
+		// c = Random.Range(5, 8);
+		// for (int i = 0; i < c; i++)
+		// {
+		// 	StampRect(position,size, Floor,3);
+		// }
+		//
+		// c = Random.Range(7, 9);
+		// for (int i = 0; i < c; i++)
+		// {
+		// 	StampRect(position,size,Floor,2);
+		// }
+		//
+		// for (int i = 0; i < 3; i++)
+		// {
+		// 	StampRect(position,size,Wall,2);
+		// }
+	}
+
+
 	public Vector2Int PlayerStartLocation()
 	{
 		return _playerStart;
 	}
+	
 	
 	public Vector2Int ChangeRandomTile(PTile from, PTile to)
 	{
@@ -122,93 +249,6 @@ public class ProtoLevel
 
 		return pLevel;
 	}
-	public static ProtoLevel CreateRandomStampLevel(int width, int height, List<Vector2Int> requiredPlayerFloors = null)
-	{
-		if (width <= 1|| height <= 1)
-		{
-			throw new Exception("Invalid Dimensions to create stamp level.");
-		}
-		ProtoLevel pLevel = new ProtoLevel
-		{
-			_width = width,
-			_height = height,
-			_tiles = new PTile[width, height],
-			_required = requiredPlayerFloors ?? new List<Vector2Int>()
-		};
-		
-		for (int x = 0; x < width; x++)
-		{
-			for (int y = 0; y < height; y++)
-			{
-				pLevel._tiles[x, y] = Wall;
-			}
-		}
-
-		foreach (var pos in pLevel._required)
-		{
-			if (pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height)
-			{
-				continue;
-			}
-			pLevel._tiles[pos.x, pos.y] = Floor;
-		}
-
-
-		for (int i = 0; i < 11; i++)
-		{
-			pLevel.StampWalk(Random.Range(5,Random.value < 0.5f ? pLevel._width : pLevel._height));
-		}
-
-		int c = Random.Range(0, 2);
-		for (int i = 0; i <c; i++)
-		{
-			pLevel.StampRect(Floor,4);
-		}
-
-		c = Random.Range(5, 8);
-		for (int i = 0; i < c; i++)
-		{
-			pLevel.StampRect(Floor,3);
-		}
-
-		c = Random.Range(7, 9);
-		for (int i = 0; i < c; i++)
-		{
-			pLevel.StampRect(Floor,2);
-		}
-
-		for (int i = 0; i < 3; i++)
-		{
-			pLevel.StampRect(Wall,2);
-		}
-
-
-		//remove dead ends.
-		Debug.Log("Removing Dead Ends");
-		int removedDeadEnds = pLevel.RemoveDeadEnds();
-		while (removedDeadEnds > 0)
-		{
-			removedDeadEnds = pLevel.RemoveDeadEnds();
-		}
-
-		//oddly enough, picking this start position is doing a really good job ensuring the levels are unplayable, lol.
-		Debug.Log("Picking Player Start for room");
-		pLevel._playerStart = pLevel._required.First();
-
-		Debug.Log("Calculating Walk Paths");
-		pLevel.CalculateWalkPath();
-		
-		//todo: if the required tiles that are in this level are not in the walkpath, then we failed.
-		//Can we interset the walk paths where the player starts at every valid node?
-		
-		int fillCount = pLevel.FillUnwalkable();
-		Debug.Log($"{fillCount} dead tiles filled.");
-		//todo: this can't be the best way about getting this value...
-		var end = pLevel._visited.OrderByDescending(x=>x.Value).First().Key;
-		Debug.Log($"Exit placed on visited: {pLevel._visited[end]}");
-		pLevel._tiles[end.x, end.y] = PTile.Exit;
- 		return pLevel;
-	}
 
 	
 	public static bool IsOppositeDir(PDir a, PDir b)
@@ -227,36 +267,37 @@ public class ProtoLevel
 		throw new Exception("Invalid Direction");
 	}
 
-	private void StampRect(PTile tile, int maxSize)
+	private void StampRect(Vector2Int pos, Vector2Int size, PTile tile, int maxSize)
 	{
 		if (maxSize == 0)
 		{
 			return;
 		}
 
-		if (maxSize > _width || maxSize > _height)
+		if (maxSize > size.x || maxSize > size.y)
 		{
-			maxSize = Mathf.Min(_width, _height);
+			maxSize = Mathf.Min(size.x, size.y);
 		}
-		int startX = Random.Range(0, _width-maxSize-1);
-		int startY = Random.Range(0, _height-maxSize-1);
+		int startX = Random.Range(0, size.x-maxSize-1);
+		int startY = Random.Range(0, size.y-maxSize-1);
 		
 		int width = Random.Range(0, maxSize);
 		int height = Random.Range(0, maxSize);
 
-		if (_width == 1)
+		if (size.x == 1)
 		{
 			width = 1;
 			startX = 0;
 		}
-		if (_height == 1)
+		if (size.y == 1)
 		{
 			height = 1;
 			startY = 0;
 		}
-		if (startX < 0 || startY < 0 || startX+width >= _width || startY+height >= _height)
+		
+		if (startX < 0 || startY < 0 || startX+width >= size.x || startY+height >= size.y)
 		{
-			Debug.LogWarning($"Invalid Input to StampRect. Node size is {_width}, {_height}");
+			Debug.LogWarning($"Invalid Input to StampRect. BoundRect (bsproom) size is {size.x}, {size.y}");
 			return;
 		}
 		
@@ -265,34 +306,55 @@ public class ProtoLevel
 			for (int y = startY; y < startY+height; y++)
 			{
 				//todo: Detect why this is still sometimes out of range. 
-				_tiles[x, y] = tile;
+				_tiles[x+pos.x, y+pos.y] = tile;
 			}
 		}
 	}
 
-	private void StampWalk(int maxLength, float chanceToTurn = 0.2f)
+	private void StampWalk(Vector2Int pos, Vector2Int size, int maxLength, float chanceToTurn = 0.2f)
 	{
 		if (maxLength == 0)
 		{
 			return;
 		}
 		int centerPad = 1;
-		int startX = Random.Range(centerPad, _width - centerPad - 1);
-		if (_width <= centerPad)
+		int startX = Random.Range(centerPad, size.x - centerPad - 1) ;
+		if (size.x <= centerPad)
 		{
 			startX = 0;
 		}
-		int startY = Random.Range(centerPad, _height - centerPad - 1);
-		if (_height <= centerPad)
+		int startY = Random.Range(centerPad, size.y - centerPad - 1);
+		if (size.y <= centerPad)
 		{
 			startY = 0;
 		}
+
+		startX = Mathf.Clamp(startX + pos.x, 0, _width - 1) - pos.x;
+		startY = Mathf.Clamp(startY + pos.y, 0, _height-1) - pos.y;
+		
 		int x = startX;
 		int y = startY;
+		
 		var d = Directions[Random.Range(0, Directions.Length)];
 		for (int i = 0; i < maxLength; i++)
 		{
-			_tiles[x, y] = Floor;
+			//just restart if out-of-bounds of the bounding box.
+			if (x < 0 || y < 0 || x >= size.x || y >= size.y)
+			{
+				x = startX;
+				y = startY;
+			}
+			//clamp? this should hopefully never happen, remove once i am sure of that.
+			int px = x + pos.x;
+			int py = y + pos.y;
+			if (px < 0 || py < 0 || px >= _width || py >= _height)
+			{
+				Debug.LogWarning("Clamp Enforced in stampwalk");
+				px = x + pos.x;
+				py = y + pos.y;
+			}
+			
+			_tiles[px, py] = Floor;
 			if (Random.value < chanceToTurn)
 			{
 				d = Directions[Random.Range(0, Directions.Length)];
@@ -311,13 +373,6 @@ public class ProtoLevel
 				case PDir.Right:
 					x++;
 					break;
-			}
-
-			//just restart if out-of-bounds.
-			if (x < 0 || y < 0 || x >= _width || y >= _height)
-			{
-				x = startX;
-				y = startY;
 			}
 		}
 	}
