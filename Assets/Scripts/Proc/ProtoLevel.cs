@@ -23,8 +23,9 @@ public class ProtoLevel
 	private Vector2Int _playerStart;
 	private Vector2Int _playerLoc;
 	private List<Vector2Int> _required;
-	private readonly Dictionary<Vector2Int, int> _visited = new Dictionary<Vector2Int, int>();
 
+	private PlayerGraph _playerGraph;
+	
 	private BSPNode _bsp;
 	public ProtoLevel(BSPNode root = null)
 	{
@@ -35,6 +36,7 @@ public class ProtoLevel
 		_walk = new int[_width, _height];
 		//todo: wait, this isn't... true? i have to dig into children i think
 		_required = _bsp.InternalConnectionPoints;
+		_playerGraph = new PlayerGraph();
 	}
 
 	public void Generate()
@@ -397,14 +399,19 @@ public class ProtoLevel
 
 	private void CalculateWalkPath()
 	{
-		_visited.Clear();
+		Debug.Log("Calculating Walk Paths");
+		_playerGraph.Clear();
 		_walk = new int[_width, _height];
 		RecursiveCalculateWalkPath(_playerStart.x, _playerStart.y,1);
 	}
 
 	private void RecursiveCalculateWalkPath(int playerX, int playerY, int steps)
 	{
-		
+		if (steps > _width * _height)
+		{
+			Debug.Log("Escape! Calc Walk Path");
+			return;
+		}
 		var startPos = new Vector2Int(playerX, playerY);
 		
 		//The player has already been here, so it's not a true stopping point.
@@ -414,8 +421,7 @@ public class ProtoLevel
 			return;
 		}
 		
-		// If the key already exists, TryAdd does nothing and returns false.
-		if (!_visited.TryAdd(startPos, steps))
+		if (_playerGraph.HasVisited(startPos))
 		{
 			return;
 		}
@@ -423,18 +429,21 @@ public class ProtoLevel
 		int nsteps = steps + 1;
 		foreach (var direction in Directions)
 		{
+			//todo: skip incoming direction (we just hit something) and reverse direction (we've been there).
 			var delta = Utility.PDirToXY(direction);
 			int x = playerX;
 			int y = playerY;
-			int distance = RecursiveWalkSinglePlayerMove(ref x,ref y, delta.x,delta.y,0,Mathf.Max(_width,_height));
+			int distance = RecursiveWalkSinglePlayerMove(ref x,ref y, delta.x,delta.y,0,Mathf.Max(_width,_height),0);
 			if (distance > 0)
 			{
+				var p = new Vector2Int(x, y);
+				_playerGraph.DirectedConnect(startPos,p);
 				RecursiveCalculateWalkPath(x, y, nsteps);
 			}
 		}
 	}
 
-	private int RecursiveWalkSinglePlayerMove( ref int px, ref int py, int dx, int dy, int depth, int maxDepth, int c = 0)
+	private int RecursiveWalkSinglePlayerMove(ref int px, ref int py, int dx, int dy, int depth, int maxDepth, int c = 0)
 	{
 		if (dx == 0 && dy == 0)
 		{

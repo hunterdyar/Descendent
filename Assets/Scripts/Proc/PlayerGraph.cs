@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Playables;
 
 namespace Proc
 {
@@ -8,6 +9,24 @@ namespace Proc
 	{
 		private readonly Dictionary<Vector2Int, PlayerNode> _nodes = new Dictionary<Vector2Int, PlayerNode>();
 
+		public void Clear()
+		{
+			_nodes.Clear();
+			//sorry gc. this only happens in generation tho. so uhhhhh well, its fine.
+		}
+		public bool TryAdd(Vector2Int pos)
+		{
+			if (!_nodes.TryGetValue(pos, out var fromNode))
+			{
+				fromNode = new PlayerNode(pos);
+				_nodes.Add(pos, fromNode);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
 		public void DirectedConnect(Vector2Int from, Vector2Int to)
 		{
 			if (!_nodes.TryGetValue(from, out var fromNode))
@@ -28,6 +47,19 @@ namespace Proc
 		public bool NoTraps()
 		{
 			return _nodes.Count > 0 && !_nodes.Values.Any(x => x.IsTrap());
+		}
+
+
+		public bool HasVisited(Vector2Int pos)
+		{
+			if (_nodes.TryGetValue(pos, out var node))
+			{
+				return node.HasExits();
+			}
+			else
+			{
+				return false;
+			}
 		}
 	}
 
@@ -54,6 +86,12 @@ namespace Proc
 		public void ConnectTo(PlayerNode toNode)
 		{
 			var direction = (toNode.Position - Position);
+			if (direction == Vector2.zero)
+			{
+				//Can't connect to self.
+				Debug.LogWarning("Tried to connect player graph node to self.");
+				return;
+			}
 			direction.Clamp(-Vector2Int.one, Vector2Int.one);
 			switch (direction.x,direction.y)
 			{
@@ -74,11 +112,15 @@ namespace Proc
 					toNode._edgesFrom[3] = this;
 					break;
 				default:
-					Debug.LogError("Invalid Direction for graph.");
+					Debug.LogError($"Invalid Direction for graph: {direction.x},{direction.y}");
 					break;
 			}
 			
-			throw new System.NotImplementedException();
+		}
+
+		public bool HasExits()
+		{
+			return _edgesTo.All(x => x == null);
 		}
 	}
 }
