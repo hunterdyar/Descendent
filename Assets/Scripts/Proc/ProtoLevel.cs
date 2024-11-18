@@ -24,6 +24,7 @@ public class ProtoLevel
 	private Vector2Int _playerLoc;
 	private List<Vector2Int> _required;
 
+	public PlayerGraph GetPlayerGraph() => _playerGraph;
 	private PlayerGraph _playerGraph;
 	
 	private BSPNode _bsp;
@@ -35,7 +36,7 @@ public class ProtoLevel
 		_tiles = new PTile[_width, _height];
 		_walk = new int[_width, _height];
 		//todo: wait, this isn't... true? i have to dig into children i think
-		_required = _bsp.InternalConnectionPoints;
+		_required = root.GetAllInternalConnectionPoints();
 		_playerGraph = new PlayerGraph();
 	}
 
@@ -45,13 +46,13 @@ public class ProtoLevel
 		StampBSPRoom(_bsp);
 		
 		//remove dead ends.
-		Debug.Log("Removing Dead Ends");
 		 int removedDeadEnds = RemoveDeadEnds();
 		 while (removedDeadEnds > 0)
 		 {
 		 	removedDeadEnds = RemoveDeadEnds();
 		 }
 
+		 _playerStart = GetRandomTile(Floor);
 		//Debug.Log("Calculating Walk Paths");
 		CalculateWalkPath();
 
@@ -68,9 +69,10 @@ public class ProtoLevel
 			if (node.Size.x >= 2 && node.Size.y >= 2)
 			{
 				var connectionPoints = new List<Vector2Int>();
-				BSPNode.GetConnectionPoints(node, ref connectionPoints);
+				//BSPNode.GetConnectionPoints(node, ref connectionPoints);
 				// var pl = ProtoLevel.CreateSolidLevel(node.Size.x - xg, node.Size.y - yg, connectionPoints);
-				StampSingleRoom(node.Position, node.Size, connectionPoints);
+				//StampSingleRoom(node.Position, node.Size, connectionPoints);
+				StampSingleRoom(node.Position, node.Size, _required);
 			}
 			else
 			{
@@ -118,6 +120,7 @@ public class ProtoLevel
 				continue;
 			}
 			_tiles[pos.x, pos.y] = Floor;
+			StampWalk(position, size, Random.Range(5, Random.value < 0.5f ? _width : _height), 0.2f, pos);
 		}
 		
 		for (int i = 0; i < 11; i++)
@@ -128,28 +131,27 @@ public class ProtoLevel
 		int c = Random.Range(0, 2);
 		for (int i = 0; i <c; i++)
 		{
-			StampRect(position, size, Floor,4);
+			StampRectangle(position, size, Floor,4);
 		}
 		
 		c = Random.Range(5, 8);
 		for (int i = 0; i < c; i++)
 		{
-			StampRect(position,size, Floor,3);
+			StampRectangle(position,size, Floor,3);
 		}
 		
 		c = Random.Range(7, 9);
 		for (int i = 0; i < c; i++)
 		{
-			StampRect(position,size,Floor,2);
+			StampRectangle(position,size,Floor,2);
 		}
 		
 		for (int i = 0; i < 3; i++)
 		{
-			StampRect(position,size,Wall,2);
+			StampRectangle(position,size,Wall,2);
 		}
 	}
-
-
+	
 	public Vector2Int PlayerStartLocation()
 	{
 		return _playerStart;
@@ -172,7 +174,7 @@ public class ProtoLevel
 		throw new Exception("Overflow Exception in GetRandomTile. Couldn't find tile");
 	}
 
-	private void StampRect(Vector2Int pos, Vector2Int size, PTile tile, int maxSize)
+	private void StampRectangle(Vector2Int pos, Vector2Int size, PTile tile, int maxSize)
 	{
 		if (maxSize == 0)
 		{
@@ -216,6 +218,47 @@ public class ProtoLevel
 		}
 	}
 
+	private void StampWalk(Vector2Int boundPos, Vector2Int boundsize, int maxLength, float chanceToTurn, Vector2Int start)
+	{
+		int x = start.x;
+		int y = start.y;
+		var d = Directions[Random.Range(0, Directions.Length)];
+		for (int i = 0; i < maxLength; i++)
+		{
+			//just restart if out-of-bounds of the bounding box.
+			if (x < 0 || y < 0 || x >= boundsize.x || y >= boundsize.y)
+			{
+				x = start.x;
+				y = start.y;
+			}
+
+			//clamp? this should hopefully never happen, remove once i am sure of that.
+			int px = x + boundPos.x;
+			int py = y + boundPos.y;
+
+			_tiles[px, py] = Floor;
+			if (Random.value < chanceToTurn)
+			{
+				d = Utility.GetRandomOrthogonalDirection(d);
+			}
+
+			switch (d)
+			{
+				case PDir.Up:
+					y++;
+					break;
+				case PDir.Down:
+					y--;
+					break;
+				case PDir.Left:
+					x--;
+					break;
+				case PDir.Right:
+					x++;
+					break;
+			}
+		}
+	}
 	private void StampWalk(Vector2Int boundPos, Vector2Int boundsize, int maxLength, float chanceToTurn = 0.2f)
 	{
 		if (maxLength == 0)
@@ -237,43 +280,7 @@ public class ProtoLevel
 		startX = Mathf.Clamp(startX + boundPos.x, 0, _width - 1) - boundPos.x;
 		startY = Mathf.Clamp(startY + boundPos.y, 0, _height- 1) - boundPos.y;
 		
-		int x = startX;
-		int y = startY;
-		
-		var d = Directions[Random.Range(0, Directions.Length)];
-		for (int i = 0; i < maxLength; i++)
-		{
-			//just restart if out-of-bounds of the bounding box.
-			if (x < 0 || y < 0 || x >= boundsize.x || y >= boundsize.y)
-			{
-				x = startX;
-				y = startY;
-			}
-			//clamp? this should hopefully never happen, remove once i am sure of that.
-			int px = x + boundPos.x;
-			int py = y + boundPos.y;
-			
-			_tiles[px, py] = Floor;
-			if (Random.value < chanceToTurn)
-			{
-				d = Utility.GetRandomOrthogonalDirection(d);
-			}
-			switch (d)
-			{
-				case PDir.Up:
-					y++;
-					break;
-				case PDir.Down:
-					y--;
-					break;
-				case PDir.Left:
-					x--;
-					break;
-				case PDir.Right:
-					x++;
-					break;
-			}
-		}
+		StampWalk(boundPos, boundsize, maxLength, chanceToTurn, new Vector2Int(startX, startY));
 	}
 	
 	private int RemoveDeadEnds()
@@ -399,7 +406,6 @@ public class ProtoLevel
 
 	private void CalculateWalkPath()
 	{
-		Debug.Log("Calculating Walk Paths");
 		_playerGraph.Clear();
 		_walk = new int[_width, _height];
 		RecursiveCalculateWalkPath(_playerStart.x, _playerStart.y,1);
@@ -421,12 +427,13 @@ public class ProtoLevel
 			return;
 		}
 		
-		if (_playerGraph.HasVisited(startPos))
+		if (_playerGraph.HasVisitedDuringGeneration(startPos))
 		{
 			return;
 		}
 
 		int nsteps = steps + 1;
+		_playerGraph.Visit(startPos);
 		foreach (var direction in Directions)
 		{
 			//todo: skip incoming direction (we just hit something) and reverse direction (we've been there).

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using UnityEngine.Playables;
 
@@ -13,19 +14,6 @@ namespace Proc
 		{
 			_nodes.Clear();
 			//sorry gc. this only happens in generation tho. so uhhhhh well, its fine.
-		}
-		public bool TryAdd(Vector2Int pos)
-		{
-			if (!_nodes.TryGetValue(pos, out var fromNode))
-			{
-				fromNode = new PlayerNode(pos);
-				_nodes.Add(pos, fromNode);
-				return true;
-			}
-			else
-			{
-				return false;
-			}
 		}
 		public void DirectedConnect(Vector2Int from, Vector2Int to)
 		{
@@ -50,24 +38,55 @@ namespace Proc
 		}
 
 
-		public bool HasVisited(Vector2Int pos)
+		public bool HasVisitedDuringGeneration(Vector2Int pos)
 		{
 			if (_nodes.TryGetValue(pos, out var node))
 			{
-				return node.HasExits();
+				return node.VisitedDuringGeneration;
 			}
 			else
 			{
 				return false;
 			}
 		}
+
+		public void DrawGraphGizmos(Vector3 offset, Vector3 scale)
+		{
+			if (_nodes.Count == 0)
+			{
+				Debug.LogWarning("Graph graph is empty!");
+				return;
+			}
+			foreach (var node in _nodes.Values)
+			{
+				Gizmos.color = node.IsTrap() ? Color.magenta : Color.blue;
+				Gizmos.DrawCube(new Vector3(node.Position.x,node.Position.y,0.25f), Vector3.one * 0.33f);
+			}
+		}
+
+		public void Visit(Vector2Int pos)
+		{
+			if (_nodes.TryGetValue(pos, out var node))
+			{
+				node.VisitedDuringGeneration = true;
+			}
+			else
+			{
+				node = new PlayerNode(pos);
+				_nodes.Add(pos, node);
+				node.VisitedDuringGeneration = true;
+			}
+		}
 	}
 
 	public class PlayerNode
 	{
+		public bool VisitedDuringGeneration = false;
 		public readonly Vector2Int Position;
 		//UP - RIGHT - DOWN - LEFT
+		private int _countTo = 0;
 		private readonly PlayerNode[] _edgesTo = new PlayerNode[4];
+		private int _countFrom = 0;
 		private readonly PlayerNode[] _edgesFrom = new PlayerNode[4];
 
 		//wait whats the graph theory term for this.
@@ -76,7 +95,8 @@ namespace Proc
 		/// </summary>
 		public bool IsTrap()
 		{
-			return _edgesFrom.All(x => x == null) && _edgesTo.Any(x => x != null);
+			//you can reach a node but you cannot get to it from any other way.
+			return _countTo <= 1;
 		}
 		public PlayerNode(Vector2Int position)
 		{
@@ -93,6 +113,10 @@ namespace Proc
 				return;
 			}
 			direction.Clamp(-Vector2Int.one, Vector2Int.one);
+			
+			_countTo++;
+			toNode._countFrom++;
+			
 			switch (direction.x,direction.y)
 			{
 				case (0,1):
@@ -115,7 +139,6 @@ namespace Proc
 					Debug.LogError($"Invalid Direction for graph: {direction.x},{direction.y}");
 					break;
 			}
-			
 		}
 
 		public bool HasExits()

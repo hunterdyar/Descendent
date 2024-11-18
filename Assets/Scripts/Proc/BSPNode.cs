@@ -199,5 +199,32 @@ namespace Proc
                 GetConnectionPoints(node.Parent, ref connectionPoints);
             }
         }
+
+        //todo: move all this to during generation.
+        public List<Vector2Int> GetAllInternalConnectionPoints()
+        {
+            List<Vector2Int> connectionPoints = new List<Vector2Int>();
+            AddChildConnectionPoints(this);
+
+            void AddChildConnectionPoints(BSPNode node)
+            {
+                foreach (var p in node._internalConnectionPoints)
+                {
+                    connectionPoints.Add(p);
+                }
+
+                if (node.childA != null)
+                {
+                    AddChildConnectionPoints(node.childA);
+                }
+
+                if (node.childB != null)
+                {
+                    AddChildConnectionPoints(node.childB);
+                }
+            }
+
+            return connectionPoints;
+        }
     }
 }
