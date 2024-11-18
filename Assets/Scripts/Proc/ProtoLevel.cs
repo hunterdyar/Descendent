@@ -330,7 +330,7 @@ public class ProtoLevel
 		}
 
 		startX = Mathf.Clamp(startX + pos.x, 0, _width - 1) - pos.x;
-		startY = Mathf.Clamp(startY + pos.y, 0, _height-1) - pos.y;
+		startY = Mathf.Clamp(startY + pos.y, 0, _height- 1) - pos.y;
 		
 		int x = startX;
 		int y = startY;
@@ -341,18 +341,13 @@ public class ProtoLevel
 			//just restart if out-of-bounds of the bounding box.
 			if (x < 0 || y < 0 || x >= size.x || y >= size.y)
 			{
+				Debug.Log($"Rewalk stamp, i is {i}");
 				x = startX;
 				y = startY;
 			}
 			//clamp? this should hopefully never happen, remove once i am sure of that.
 			int px = x + pos.x;
 			int py = y + pos.y;
-			if (px < 0 || py < 0 || px >= _width || py >= _height)
-			{
-				Debug.LogWarning("Clamp Enforced in stampwalk");
-				px = x + pos.x;
-				py = y + pos.y;
-			}
 			
 			_tiles[px, py] = Floor;
 			if (Random.value < chanceToTurn)
