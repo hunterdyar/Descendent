@@ -174,15 +174,19 @@ public class RuntimeLevel
                 if (pt == PTile.Floor)
                 {
                     rl._environment.Add(new Vector2Int(x,y), EnvTile.Floor);
+                    continue;
                 }else if (pt == PTile.Wall)
                 {
                     rl._environment.Add(new Vector2Int(x, y), EnvTile.Wall);
+                    continue;
                 }else if (pt == PTile.Exit)
                 {
                     rl._environment.Add(new Vector2Int(x, y), EnvTile.Floor);
                     rl._initialAgents.Add(new Vector2Int(x, y), AgentType.Exit);
-                }else
-                {
+                    continue;
+                }else if (pt == PTile.None) {
+                    continue;
+                }else{
                     throw new Exception($"Unknown tile type {pt}");
                 }
             }

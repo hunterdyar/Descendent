@@ -3,7 +3,8 @@
 /// </summary>
 public enum PTile
 {
-	Floor = 0,
+	None = 0,
+	Floor,
 	Wall,
 	Exit,
 }

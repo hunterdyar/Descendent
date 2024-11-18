@@ -44,19 +44,19 @@ public class ProtoLevel
 		
 		//remove dead ends.
 		Debug.Log("Removing Dead Ends");
-		int removedDeadEnds = RemoveDeadEnds();
-		while (removedDeadEnds > 0)
-		{
-			removedDeadEnds = RemoveDeadEnds();
-		}
+		 int removedDeadEnds = RemoveDeadEnds();
+		 while (removedDeadEnds > 0)
+		 {
+		 	removedDeadEnds = RemoveDeadEnds();
+		 }
 
-		Debug.Log("Calculating Walk Paths");
+		//Debug.Log("Calculating Walk Paths");
 		CalculateWalkPath();
 
 		//todo: if the required tiles that are in this level are not in the walkpath, then we failed.
 		//Can we interset the walk paths where the player starts at every valid node?
 
-		int fillCount = FillUnwalkable();
+		//int fillCount = FillUnwalkable();
 	}
 
 	private void StampBSPRoom(BSPNode node)
@@ -78,16 +78,16 @@ public class ProtoLevel
 		else
 		{
 			//gaps between the floors.
-			foreach (var internalConnectionPoint in node.InternalConnectionPoints)
-			{
-				_tiles[internalConnectionPoint.x, internalConnectionPoint.y] = Floor;
-			}
+			 foreach (var internalConnectionPoint in node.InternalConnectionPoints)
+			 {
+			 	_tiles[internalConnectionPoint.x, internalConnectionPoint.y] = Floor;
+			 }
 
 			StampBSPRoom(node.ChildA);
 			StampBSPRoom(node.ChildB);
 		}
 	}
-
+	
 	private void StampSingleRoom(Vector2Int position, Vector2Int size, List<Vector2Int> connectionPoints)
 	{
 		int width = size.x;
@@ -101,100 +101,56 @@ public class ProtoLevel
 
 		var required = connectionPoints ?? new List<Vector2Int>();
 		
-		for (int x = px; x < width; x++)
+		for (int x = 0; x < width; x++)
 		{
-			for (int y = py; y < height; y++)
+			for (int y = 0; y < height; y++)
 			{
-				_tiles[x, y] = Wall;
+				_tiles[px+x, py+y] = Wall;
 			}
 		}
 
-		// foreach (var pos in required)
-		// {
-		// 	if (pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height)
-		// 	{
-		// 		continue;
-		// 	}
-		// 	_tiles[pos.x, pos.y] = Floor;
-		// }
-
-
+		foreach (var pos in required)
+		{
+			if (pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height)
+			{
+				continue;
+			}
+			_tiles[pos.x, pos.y] = Floor;
+		}
+		
 		for (int i = 0; i < 11; i++)
 		{
 			StampWalk(position, size, Random.Range(5,Random.value < 0.5f ? _width : _height));
 		}
 
-		// int c = Random.Range(0, 2);
-		// for (int i = 0; i <c; i++)
-		// {
-		// 	StampRect(position, size, Floor,4);
-		// }
-		//
-		// c = Random.Range(5, 8);
-		// for (int i = 0; i < c; i++)
-		// {
-		// 	StampRect(position,size, Floor,3);
-		// }
-		//
-		// c = Random.Range(7, 9);
-		// for (int i = 0; i < c; i++)
-		// {
-		// 	StampRect(position,size,Floor,2);
-		// }
-		//
-		// for (int i = 0; i < 3; i++)
-		// {
-		// 	StampRect(position,size,Wall,2);
-		// }
+		int c = Random.Range(0, 2);
+		for (int i = 0; i <c; i++)
+		{
+			StampRect(position, size, Floor,4);
+		}
+		
+		c = Random.Range(5, 8);
+		for (int i = 0; i < c; i++)
+		{
+			StampRect(position,size, Floor,3);
+		}
+		
+		c = Random.Range(7, 9);
+		for (int i = 0; i < c; i++)
+		{
+			StampRect(position,size,Floor,2);
+		}
+		
+		for (int i = 0; i < 3; i++)
+		{
+			StampRect(position,size,Wall,2);
+		}
 	}
 
 
 	public Vector2Int PlayerStartLocation()
 	{
 		return _playerStart;
-	}
-	
-	
-	public Vector2Int ChangeRandomTile(PTile from, PTile to)
-	{
-		if (from == to)
-		{
-			return -Vector2Int.one;
-		}
-
-		int escape = _width * _height * 3;
-		while (escape > 0)
-		{
-			int x = Random.Range(0, _width);
-			int y = Random.Range(0, _height);
-			if (_tiles[x, y] == from)
-			{
-				_tiles[x, y] = to;
-				return new Vector2Int(x, y);
-			}
-
-			escape--;
-		}
-		
-		//todo: change to TryOut pattern and catch errors?
-		throw new Exception("Overflow Exception in ChangeRandomTile. Couldn't find tile");
-	}
-
-	private static (int x, int y) PDirToXY(PDir dir)
-	{
-		switch (dir)
-		{
-			case PDir.Down:
-				return (0, -1);
-			case PDir.Up:
-				return (0, 1);
-			case PDir.Left:
-				return (-1, 0);
-			case PDir.Right:
-				return (1, 0);
-			default:
-				throw new Exception("Invalid PDir");
-		}
 	}
 	
 	public Vector2Int GetRandomTile(PTile floor)
@@ -212,59 +168,6 @@ public class ProtoLevel
 			escape--;
 		}
 		throw new Exception("Overflow Exception in GetRandomTile. Couldn't find tile");
-	}
-
-	public static ProtoLevel CreateSolidLevel(int width, int height, List<Vector2Int> required)
-	{
-		if (width <= 1 || height <= 1)
-		{
-			throw new Exception("Invalid Dimensions to create stamp level.");
-		}
-
-		ProtoLevel pLevel = new ProtoLevel
-		{
-			_width = width,
-			_height = height,
-			_tiles = new PTile[width, height],
-			_required = required ?? new List<Vector2Int>()
-		};
-		for (var x = 0; x < width; x++)
-		{
-			for (var y = 0; y < height; y++)
-			{
-				pLevel._tiles[x, y] = Wall;
-			}
-		}
-
-		foreach (var r in pLevel._required)
-		{
-			if (r.x < 0 || r.x >= width || r.y < 0 || r.y >= height)
-			{
-				//this is... no longer a problem?
-				//Debug.LogWarning($"Connection point out of bounds: p {r.x}, {r.y}; s {width}, {height}");
-				continue;
-			}
-			pLevel._tiles[r.x, r.y] = Floor;
-		}
-
-		return pLevel;
-	}
-
-	
-	public static bool IsOppositeDir(PDir a, PDir b)
-	{
-		switch (a)
-		{
-			case PDir.Up:
-				return b == PDir.Down;
-			case PDir.Down :
-				return b == PDir.Up;
-			case PDir.Left:
-				return b == PDir.Right;
-			case PDir.Right:
-				return b == PDir.Left;
-		}
-		throw new Exception("Invalid Direction");
 	}
 
 	private void StampRect(Vector2Int pos, Vector2Int size, PTile tile, int maxSize)
@@ -311,26 +214,26 @@ public class ProtoLevel
 		}
 	}
 
-	private void StampWalk(Vector2Int pos, Vector2Int size, int maxLength, float chanceToTurn = 0.2f)
+	private void StampWalk(Vector2Int boundPos, Vector2Int boundsize, int maxLength, float chanceToTurn = 0.2f)
 	{
 		if (maxLength == 0)
 		{
 			return;
 		}
 		int centerPad = 1;
-		int startX = Random.Range(centerPad, size.x - centerPad - 1) ;
-		if (size.x <= centerPad)
+		int startX = Random.Range(centerPad, boundsize.x - centerPad - 1) ;
+		if (boundsize.x <= centerPad)
 		{
 			startX = 0;
 		}
-		int startY = Random.Range(centerPad, size.y - centerPad - 1);
-		if (size.y <= centerPad)
+		int startY = Random.Range(centerPad, boundsize.y - centerPad - 1);
+		if (boundsize.y <= centerPad)
 		{
 			startY = 0;
 		}
 
-		startX = Mathf.Clamp(startX + pos.x, 0, _width - 1) - pos.x;
-		startY = Mathf.Clamp(startY + pos.y, 0, _height- 1) - pos.y;
+		startX = Mathf.Clamp(startX + boundPos.x, 0, _width - 1) - boundPos.x;
+		startY = Mathf.Clamp(startY + boundPos.y, 0, _height- 1) - boundPos.y;
 		
 		int x = startX;
 		int y = startY;
@@ -339,20 +242,19 @@ public class ProtoLevel
 		for (int i = 0; i < maxLength; i++)
 		{
 			//just restart if out-of-bounds of the bounding box.
-			if (x < 0 || y < 0 || x >= size.x || y >= size.y)
+			if (x < 0 || y < 0 || x >= boundsize.x || y >= boundsize.y)
 			{
-				Debug.Log($"Rewalk stamp, i is {i}");
 				x = startX;
 				y = startY;
 			}
 			//clamp? this should hopefully never happen, remove once i am sure of that.
-			int px = x + pos.x;
-			int py = y + pos.y;
+			int px = x + boundPos.x;
+			int py = y + boundPos.y;
 			
 			_tiles[px, py] = Floor;
 			if (Random.value < chanceToTurn)
 			{
-				d = Directions[Random.Range(0, Directions.Length)];
+				d = Utility.GetRandomOrthogonalDirection(d);
 			}
 			switch (d)
 			{
@@ -371,7 +273,7 @@ public class ProtoLevel
 			}
 		}
 	}
-
+	
 	private int RemoveDeadEnds()
 	{
 		int changed = 0;
@@ -411,7 +313,7 @@ public class ProtoLevel
 				for (int i = 0; i < 4; i++)
 				{
 					var d = dir[i];
-					var delta = PDirToXY(d);
+					var delta = Utility.PDirToXY(d);
 					int nextX = x + delta.x;
 					int nextY = y + delta.y;
 					if (nextX < 0 || nextX >= _width || nextY < 0 || nextY >= _height)
@@ -502,6 +404,7 @@ public class ProtoLevel
 
 	private void RecursiveCalculateWalkPath(int playerX, int playerY, int steps)
 	{
+		
 		var startPos = new Vector2Int(playerX, playerY);
 		
 		//The player has already been here, so it's not a true stopping point.
@@ -520,7 +423,7 @@ public class ProtoLevel
 		int nsteps = steps + 1;
 		foreach (var direction in Directions)
 		{
-			var delta = PDirToXY(direction);
+			var delta = Utility.PDirToXY(direction);
 			int x = playerX;
 			int y = playerY;
 			int distance = RecursiveWalkSinglePlayerMove(ref x,ref y, delta.x,delta.y,0,Mathf.Max(_width,_height));
